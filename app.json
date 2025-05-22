@@ -2,6 +2,16 @@
   "expo": {
     "name": "hymns-app",
     "slug": "hymns-app",
-    "version": "1.0.0"
+    "version": "1.0.0",
+    "backgroundColor": "#ffffff",
+
+    "android": {
+      "package": "com.bunsenplus.hymnsapp"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "d7cb8427-b88f-40f9-a885-1ef8431ba4ff"
+      }
+    }
   }
 }

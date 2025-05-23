@@ -2,6 +2,7 @@ import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import HymnsList from '../screens/HymnsList';
 import HymnDetail from '../screens/HymnDetail';
+import HymnEdit from '../screens/HymnEdit';
 import CategoryHymns from "../screens/CategoryHymn";
 
 const Stack = createStackNavigator();
@@ -23,6 +24,11 @@ const HymnsStackNavigator = () => {
                 name="HymnDetail"
                 component={HymnDetail}
                 options={{ title: 'Hymn Detail' }}
+            />
+            <Stack.Screen
+                name="HymnEdit"
+                component={HymnEdit}
+                options={{ title: 'Hymn Edit' }}
             />
             <Stack.Screen
                 name="CategoryHymns"

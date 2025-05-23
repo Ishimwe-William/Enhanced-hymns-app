@@ -3,7 +3,18 @@ import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
 import {Colors} from "../../utils/colors";
 
-const Header = ({title, showBack, showRefresh, showMenu, onBack, onRefresh, onMenu}) => {
+const Header = ({
+                    title,
+                    showBack,
+                    showRefresh,
+                    showMenu,
+                    onBack,
+                    onRefresh,
+                    onMenu,
+                    onMore,
+                    showMore = true,
+                    moreIcon = "ellipsis-vertical"
+                }) => {
     return (
         <View style={styles.header}>
             <View style={styles.leftSection}>
@@ -27,9 +38,11 @@ const Header = ({title, showBack, showRefresh, showMenu, onBack, onRefresh, onMe
                         <Ionicons name="refresh" size={24} color="white"/>
                     </TouchableOpacity>
                 )}
-                <TouchableOpacity style={styles.iconButton}>
-                    <Ionicons name="ellipsis-vertical" size={24} color="white"/>
-                </TouchableOpacity>
+                {showMore && (
+                    <TouchableOpacity style={styles.iconButton} onPress={onMore}>
+                        <Ionicons name={moreIcon} size={24} color="white"/>
+                    </TouchableOpacity>
+                )}
             </View>
         </View>
     );

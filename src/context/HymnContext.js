@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { fetchHymns, fetchHymnDetails } from '../services/hymnService';
+import {fetchHymns, fetchHymnDetails, updateHymnData} from '../services/hymnService';
 
 const HymnContext = createContext();
 
@@ -51,6 +51,26 @@ export const HymnProvider = ({ children }) => {
         });
     };
 
+    const updateHymn = async (hymnId, hymnData) => {
+        try {
+            await updateHymnData(hymnId, hymnData);
+
+            // Update local hymns list to reflect changes
+            setHymns(prevHymns =>
+                prevHymns.map(hymn =>
+                    hymn.id === hymnId
+                        ? { ...hymn, ...hymnData }
+                        : hymn
+                )
+            );
+
+            return true;
+        } catch (error) {
+            console.error('Error updating hymn:', error);
+            throw error;
+        }
+    };
+
     const addToRecent = (hymn) => {
         setRecentHymns(prev => {
             const filtered = prev.filter(recent => recent.id !== hymn.id);
@@ -75,6 +95,7 @@ export const HymnProvider = ({ children }) => {
         loadHymnDetails,
         toggleFavorite,
         isFavorite,
+        updateHymn,
     };
 
     return (

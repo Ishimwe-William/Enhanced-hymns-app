@@ -2,7 +2,7 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Header from '../components/ui/Header';
-import HymnListView from '../components/hymns/HymnListView';
+import HymnListView from '../components/hymns/list/HymnListView';
 import { useHymns } from '../context/HymnContext';
 
 const CategoryHymns = () => {

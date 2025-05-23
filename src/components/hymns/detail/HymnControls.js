@@ -5,8 +5,8 @@ import {
     Alert,
     Animated,
 } from 'react-native';
-import {useHymns} from '../../context/HymnContext';
-import FloatingButton from '../ui/FloatingButton';
+import {useHymns} from '../../../context/HymnContext';
+import FloatingButton from '../../ui/FloatingButton';
 
 const HymnControls = ({hymn}) => {
     const {toggleFavorite, isFavorite} = useHymns();

@@ -1,11 +1,11 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
-const RefrainView = ({ refrain }) => {
+const StanzaView = ({ stanza }) => {
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Refrain</Text>
-            <Text style={styles.text}>{refrain.text}</Text>
+            <Text style={styles.title}>Stanza {stanza.stanzaNumber}</Text>
+            <Text style={styles.text}>{stanza.text}</Text>
         </View>
     );
 };
@@ -13,22 +13,19 @@ const RefrainView = ({ refrain }) => {
 const styles = StyleSheet.create({
     container: {
         marginBottom: 24,
-        paddingLeft: 16,
-        borderLeftWidth: 3,
-        borderLeftColor: '#007AFF',
+        alignItems: "center",
     },
     title: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#007AFF',
+        color: '#666',
         marginBottom: 8,
     },
     text: {
         fontSize: 18,
         lineHeight: 28,
         color: '#333',
-        fontStyle: 'italic',
     },
 });
 
-export default RefrainView;
+export default StanzaView;

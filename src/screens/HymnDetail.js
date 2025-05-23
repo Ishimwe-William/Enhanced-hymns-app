@@ -1,17 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import React, {useState, useEffect} from 'react';
+import {View, StyleSheet, TouchableOpacity, Text} from 'react-native';
+import {useNavigation, useRoute} from '@react-navigation/native';
 import Header from '../components/ui/Header';
-import HymnContent from '../components/hymns/HymnContent';
-import HymnControls from '../components/hymns/HymnControls';
+import HymnContent from '../components/hymns/detail/HymnContent';
+import HymnControls from '../components/hymns/detail/HymnControls';
 import LoadingScreen from '../components/LoadingScreen';
-import { useHymns } from '../context/HymnContext';
+import {useHymns} from '../context/HymnContext';
 
 const HymnDetail = () => {
     const navigation = useNavigation();
     const route = useRoute();
-    const { hymnId } = route.params;
-    const { loadHymnDetails } = useHymns();
+    const {hymnId} = route.params;
+    const {loadHymnDetails} = useHymns();
     const [hymn, setHymn] = useState(null);
     const [loading, setLoading] = useState(true);
 
@@ -35,15 +35,25 @@ const HymnDetail = () => {
         navigation.goBack();
     };
 
+    const handleEdit = () => {
+        navigation.navigate('HymnEdit', { hymnId });
+    };
+
     if (loading) {
-        return <LoadingScreen message="Loading hymn..." />;
+        return <LoadingScreen message="Loading hymn..."/>;
     }
 
     return (
         <View style={styles.container}>
-            <Header title={` ${hymn.number} - ${hymn?.title}`  || 'Hymn'} showBack onBack={handleBack} />
-            <HymnContent hymn={hymn} />
-            <HymnControls hymn={hymn} />
+            <Header
+                title={` ${hymn.number} - ${hymn?.title}` || 'Hymn'}
+                showBack
+                onBack={handleBack}
+                onMore={handleEdit}
+                moreIcon={"create-outline"}
+            />
+            <HymnContent hymn={hymn}/>
+            <HymnControls hymn={hymn}/>
         </View>
     );
 };
@@ -51,6 +61,16 @@ const HymnDetail = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+    },
+    editButton: {
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        marginRight: 8,
+    },
+    editButtonText: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#007AFF',
     },
 });
 

@@ -22,7 +22,8 @@ const HymnContent = ({hymn}) => {
             // Add the stanza
             content.push(
                 <View key={`stanza-${stanza.stanzaNumber}`} style={styles.stanzaContainer}>
-                    <StanzaView stanza={stanza}/>
+                    { stanza.stanzaNumber !== 0 && <StanzaView stanza={stanza}/> }
+
                 </View>
             );
 
@@ -62,7 +63,7 @@ const HymnContent = ({hymn}) => {
                                 <Text style={styles.hymnNumber}>Key: {hymn.doh}</Text>
                             )}
                             {hymn.origin && (
-                                <Text style={styles.origin}>{hymn.origin}</Text>
+                                <Text ellipsizeMode={'tail'} numberOfLines={1} style={styles.origin}>{hymn.origin}</Text>
                             )}
                         </View>
                     </>
@@ -110,6 +111,7 @@ const styles = StyleSheet.create({
     },
     origin: {
         fontSize: 14,
+        width: "80%",
         fontStyle: 'italic',
         color: '#888',
     },

@@ -48,7 +48,7 @@ const AboutScreen = () => {
 
                 <View style={styles.section}>
                     <Text style={styles.copyright}>
-                        © 2024 Hymns Collection. All rights reserved.
+                        `© {new Date().getFullYear()} Hymns Collection. All rights reserved.`
                     </Text>
                 </View>
             </ScrollView>

@@ -1,11 +1,11 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useNavigation, DrawerActions } from '@react-navigation/native';
-import Header from '../components/ui/Header';
-import SearchBar from '../components/ui/SearchBar';
-import HymnListView from '../components/hymns/list/HymnListView';
-import LoadingScreen from '../components/LoadingScreen';
-import { useHymns } from '../context/HymnContext';
+import Header from '../../components/ui/Header';
+import SearchBar from '../../components/ui/SearchBar';
+import HymnListView from '../../components/hymns/list/HymnListView';
+import LoadingScreen from '../../components/LoadingScreen';
+import { useHymns } from '../../context/HymnContext';
 
 const HymnsList = () => {
     const navigation = useNavigation();

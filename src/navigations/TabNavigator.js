@@ -1,10 +1,10 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import HymnsStackNavigator from './HymnsStackNavigator';
-import CategoriesScreen from '../screens/CategoriesScreen';
-import SearchScreen from '../screens/SearchScreen';
-import RecentScreen from '../screens/RecentScreen';
+import HymnsStackNavigator from './stacks/HymnsStackNavigator';
+import CategoriesScreen from '../screens/hymns/CategoriesScreen';
+import SearchScreen from '../screens/hymns/SearchScreen';
+import RecentScreen from '../screens/hymns/RecentScreen';
 
 const Tab = createBottomTabNavigator();
 

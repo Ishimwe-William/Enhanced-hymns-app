@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 import { useNavigation, DrawerActions } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import Header from '../components/ui/Header';
+import Header from '../../components/ui/Header';
 
 const categories = [
     { id: '1', name: 'Praise & Worship', icon: 'musical-notes', count: 45 },

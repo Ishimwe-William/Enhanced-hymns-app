@@ -8,13 +8,13 @@ import {
     Platform
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import Header from '../components/ui/Header';
-import LoadingScreen from '../components/LoadingScreen';
-import HymnBasicInfo from '../components/hymns/edit/HymnBasicInfo';
-import HymnStanzasSection from '../components/hymns/edit/HymnStanzasSection';
-import HymnRefrainsSection from '../components/hymns/edit/HymnRefrainsSection';
-import { useHymns } from '../context/HymnContext';
-import { useHymnEditor } from '../hooks/useHymnEditor';
+import Header from '../../components/ui/Header';
+import LoadingScreen from '../../components/LoadingScreen';
+import HymnBasicInfo from '../../components/hymns/edit/HymnBasicInfo';
+import HymnStanzasSection from '../../components/hymns/edit/HymnStanzasSection';
+import HymnRefrainsSection from '../../components/hymns/edit/HymnRefrainsSection';
+import { useHymns } from '../../context/HymnContext';
+import { useHymnEditor } from '../../hooks/useHymnEditor';
 
 const HymnEdit = () => {
     const navigation = useNavigation();

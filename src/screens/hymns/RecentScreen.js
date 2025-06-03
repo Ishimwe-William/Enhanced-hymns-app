@@ -1,10 +1,10 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useNavigation, DrawerActions } from '@react-navigation/native';
-import Header from '../components/ui/Header';
-import HymnListView from '../components/hymns/list/HymnListView';
-import EmptyState from '../components/EmptyState';
-import { useHymns } from '../context/HymnContext';
+import Header from '../../components/ui/Header';
+import HymnListView from '../../components/hymns/list/HymnListView';
+import EmptyState from '../../components/EmptyState';
+import { useHymns } from '../../context/HymnContext';
 
 const RecentScreen = () => {
     const navigation = useNavigation();

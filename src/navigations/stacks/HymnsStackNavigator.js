@@ -1,9 +1,9 @@
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
-import HymnsList from '../screens/HymnsList';
-import HymnDetail from '../screens/HymnDetail';
-import HymnEdit from '../screens/HymnEdit';
-import CategoryHymns from "../screens/CategoryHymn";
+import HymnsList from '../../screens/hymns/HymnsList';
+import HymnDetail from '../../screens/hymns/HymnDetail';
+import HymnEdit from '../../screens/hymns/HymnEdit';
+import CategoryHymns from "../../screens/hymns/CategoryHymn";
 
 const Stack = createStackNavigator();
 

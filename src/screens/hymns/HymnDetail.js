@@ -1,11 +1,11 @@
 import React, {useState, useEffect} from 'react';
-import {View, StyleSheet, TouchableOpacity, Text} from 'react-native';
+import {View, StyleSheet} from 'react-native';
 import {useNavigation, useRoute} from '@react-navigation/native';
-import Header from '../components/ui/Header';
-import HymnContent from '../components/hymns/detail/HymnContent';
-import HymnControls from '../components/hymns/detail/HymnControls';
-import LoadingScreen from '../components/LoadingScreen';
-import {useHymns} from '../context/HymnContext';
+import Header from '../../components/ui/Header';
+import HymnContent from '../../components/hymns/detail/HymnContent';
+import HymnControls from '../../components/hymns/detail/HymnControls';
+import LoadingScreen from '../../components/LoadingScreen';
+import {useHymns} from '../../context/HymnContext';
 
 const HymnDetail = () => {
     const navigation = useNavigation();

@@ -3,7 +3,8 @@ import {createDrawerNavigator} from '@react-navigation/drawer';
 import {Ionicons} from '@expo/vector-icons';
 import TabNavigator from './TabNavigator';
 import SettingsScreen from '../screens/SettingsScreen';
-import FavoritesScreen from '../screens/FavoritesScreen';
+import ProfileScreen from '../screens/ProfileScreen';
+import FavoritesScreen from '../screens/hymns/FavoritesScreen';
 import AboutScreen from '../screens/AboutScreen';
 import CustomDrawerContent from '../components/CustomDrawerContent';
 
@@ -54,6 +55,16 @@ const DrawerNavigator = () => {
                     drawerLabel: 'Settings',
                     drawerIcon: ({color, size}) => (
                         <Ionicons name="settings-outline" size={size} color={color}/>
+                    ),
+                }}
+            />
+            <Drawer.Screen
+                name="Profile"
+                component={ProfileScreen}
+                options={{
+                    drawerLabel: 'Profile',
+                    drawerIcon: ({color, size}) => (
+                        <Ionicons name="person-outline" size={size} color={color}/>
                     ),
                 }}
             />

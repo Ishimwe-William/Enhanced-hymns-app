@@ -9,7 +9,7 @@ import {
     Dimensions
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from "../../utils/colors";
+import {useTheme} from "../../context/ThemeContext";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -27,6 +27,66 @@ const Header = ({
                     modalContent // New prop for modal content
                 }) => {
     const [modalVisible, setModalVisible] = useState(false);
+    const {theme} = useTheme();
+
+    const styles = StyleSheet.create({
+        header: {
+            backgroundColor: theme.colors.primary,
+            paddingHorizontal: 16,
+            paddingVertical: 8,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+        },
+        leftSection: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            flex: 1,
+        },
+        rightSection: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            flex: 1,
+            justifyContent: 'flex-end',
+        },
+        title: {
+            color: 'white',
+            fontSize: 20,
+            flex: 4,
+            fontWeight: '600',
+            textAlign: 'center',
+        },
+        iconButton: {
+            padding: 8,
+        },
+        backButton: {
+            padding: 8,
+            marginRight: 8,
+        },
+        modalOverlay: {
+            flex: 1,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            justifyContent: 'center',
+            alignItems: 'center',
+        },
+        modalContent: {
+            backgroundColor: 'white',
+            borderRadius: 12,
+            padding: 20,
+            minWidth: screenWidth * 0.8,
+            maxWidth: screenWidth * 0.9,
+            maxHeight: screenHeight * 0.8,
+            shadowColor: '#000',
+            shadowOffset: {
+                width: 0,
+                height: 2,
+            },
+            shadowOpacity: 0.25,
+            shadowRadius: 3.84,
+            elevation: 5,
+        },
+    });
+
 
     const handleMorePress = () => {
         if (modalContent) {
@@ -94,62 +154,5 @@ const Header = ({
     );
 };
 
-const styles = StyleSheet.create({
-    header: {
-        backgroundColor: Colors.primary500,
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-    },
-    leftSection: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        flex: 1,
-    },
-    rightSection: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        flex: 1,
-        justifyContent: 'flex-end',
-    },
-    title: {
-        color: 'white',
-        fontSize: 20,
-        flex: 4,
-        fontWeight: '600',
-        textAlign: 'center',
-    },
-    iconButton: {
-        padding: 8,
-    },
-    backButton: {
-        padding: 8,
-        marginRight: 8,
-    },
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    modalContent: {
-        backgroundColor: 'white',
-        borderRadius: 12,
-        padding: 20,
-        minWidth: screenWidth * 0.8,
-        maxWidth: screenWidth * 0.9,
-        maxHeight: screenHeight * 0.8,
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-        elevation: 5,
-    },
-});
 
 export default Header;

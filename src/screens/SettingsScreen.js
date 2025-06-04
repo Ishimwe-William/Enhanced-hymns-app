@@ -1,14 +1,17 @@
-import React, {useState} from 'react';
-import {View, Text, TouchableOpacity, StyleSheet, ScrollView, Switch, Alert} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {View, Text, StyleSheet, ScrollView, Alert} from 'react-native';
 import {useNavigation, DrawerActions} from '@react-navigation/native';
-import {Ionicons} from '@expo/vector-icons';
 import Header from '../components/ui/Header';
 import {usePreferences} from '../context/PreferencesContext';
 import {useUser} from '../context/UserContext';
 import WarningBanner from "../components/ui/WarningBanner";
+import {ListItem} from "../components/ui/ListItem";
+import {SwitchItem} from "../components/ui/SwitchItem";
+import {useTheme} from "../context/ThemeContext";
 
 const SettingsScreen = () => {
     const navigation = useNavigation();
+    const { theme, themeMode, toggleTheme } = useTheme();
     const {signIn} = useUser();
 
     const {
@@ -21,6 +24,12 @@ const SettingsScreen = () => {
         syncing
     } = usePreferences();
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        if (preferences.theme && preferences.theme !== themeMode) {
+            toggleTheme();
+        }
+    }, [preferences.theme]);
 
     const handleMenuPress = () => {
         navigation.dispatch(DrawerActions.openDrawer());
@@ -38,17 +47,9 @@ const SettingsScreen = () => {
     };
 
     const handleThemeChange = () => {
+        toggleTheme();
         const newTheme = preferences.theme === 'light' ? 'dark' : 'light';
         updatePreference('theme', newTheme);
-    };
-
-    const handleVolumeChange = () => {
-        // This would typically open a slider or picker
-        Alert.alert(
-            'Volume Settings',
-            'Volume adjustment would open here',
-            [{text: 'OK'}]
-        );
     };
 
     const handleResetSettings = () => {
@@ -76,36 +77,6 @@ const SettingsScreen = () => {
         );
     };
 
-    const SettingItem = ({icon, title, subtitle, onPress, rightElement}) => (
-        <TouchableOpacity style={styles.settingItem} onPress={onPress}>
-            <View style={styles.settingIcon}>
-                <Ionicons name={icon} size={22} color="#007AFF"/>
-            </View>
-            <View style={styles.settingContent}>
-                <Text style={styles.settingTitle}>{title}</Text>
-                {subtitle && <Text style={styles.settingSubtitle}>{subtitle}</Text>}
-            </View>
-            {rightElement || <Ionicons name="chevron-forward" size={20} color="#C7C7CC"/>}
-        </TouchableOpacity>
-    );
-
-    const SwitchItem = ({icon, title, subtitle, value, onValueChange}) => (
-        <View style={styles.settingItem}>
-            <View style={styles.settingIcon}>
-                <Ionicons name={icon} size={22} color="#007AFF"/>
-            </View>
-            <View style={styles.settingContent}>
-                <Text style={styles.settingTitle}>{title}</Text>
-                {subtitle && <Text style={styles.settingSubtitle}>{subtitle}</Text>}
-            </View>
-            <Switch
-                value={value}
-                onValueChange={onValueChange}
-                trackColor={{false: '#E5E5EA', true: '#34C759'}}
-                thumbColor={value ? '#FFFFFF' : '#FFFFFF'}
-            />
-        </View>
-    );
 
     const formatFontSize = (size) => {
         return size.charAt(0).toUpperCase() + size.slice(1);
@@ -134,20 +105,19 @@ const SettingsScreen = () => {
                 {syncing && (
                     <WarningBanner
                         icon={"sync"}
-                        color={"#007AFF"}
                         message={"Syncing settings with cloud..."}
                     />
                 )}
 
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Display</Text>
-                    <SettingItem
+                    <ListItem
                         icon="text"
                         title="Font Size"
                         subtitle={formatFontSize(preferences.fontSize)}
                         onPress={handleFontSizeChange}
                     />
-                    <SettingItem
+                    <ListItem
                         icon="color-palette"
                         title="Theme"
                         subtitle={formatTheme(preferences.theme)}
@@ -170,23 +140,6 @@ const SettingsScreen = () => {
                 </View>
 
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Audio</Text>
-                    <SettingItem
-                        icon="volume-high"
-                        title="Playback Volume"
-                        subtitle={`${preferences.playbackVolume}%`}
-                        onPress={handleVolumeChange}
-                    />
-                    <SwitchItem
-                        icon="play"
-                        title="Auto-play"
-                        subtitle="Automatically play hymns"
-                        value={preferences.autoPlay}
-                        onValueChange={(value) => updatePreference('autoPlay', value)}
-                    />
-                </View>
-
-                <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Data & Sync</Text>
                     <SwitchItem
                         icon="cloud-download"
@@ -204,7 +157,7 @@ const SettingsScreen = () => {
                                 value={preferences.syncFavorites}
                                 onValueChange={(value) => updatePreference('syncFavorites', value)}
                             />
-                            <SettingItem
+                            <ListItem
                                 icon="cloud-download"
                                 title="Sync from Cloud"
                                 subtitle="Download latest settings from cloud"
@@ -241,7 +194,7 @@ const SettingsScreen = () => {
 
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Account</Text>
-                    <SettingItem
+                    <ListItem
                         icon="refresh"
                         title="Reset Settings"
                         subtitle="Reset all settings to defaults"
@@ -273,36 +226,7 @@ const styles = StyleSheet.create({
         marginLeft: 16,
         textTransform: 'uppercase',
         letterSpacing: 0.5,
-    },
-    settingItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: 'white',
-        padding: 16,
-        marginBottom: 1,
-    },
-    settingIcon: {
-        width: 32,
-        height: 32,
-        borderRadius: 6,
-        backgroundColor: '#F0F8FF',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginRight: 12,
-    },
-    settingContent: {
-        flex: 1,
-    },
-    settingTitle: {
-        fontSize: 16,
-        fontWeight: '500',
-        color: '#333',
-    },
-    settingSubtitle: {
-        fontSize: 14,
-        color: '#666',
-        marginTop: 2,
-    },
+    }
 });
 
 export default SettingsScreen;

@@ -1,12 +1,26 @@
-export const Colors = {
-    primary500: "#007AFF",
-    text: "#000000",
-    disabled: '#C7C7CC',
-    error: '#FF3B30',
-    warning: '#FF9500',
-    info: '#007AFF',
-    infoDark: '#0056CC',
-    infoBackground: '#E3F2FD',
-    textSecondary: '#8E8E93',
-    border: '#E5E5EA',
+export const themes = {
+    light: {
+        mode: 'light',
+        colors: {
+            background: '#FFFFFF',
+            text: '#000000',
+            primary: '#007AFF',
+            card: '#F8F9FA',
+            border: '#E0E0E0',
+            notification: '#007AFF',
+            textSecondary: '#666666',
+        },
+    },
+    dark: {
+        mode: 'dark',
+        colors: {
+            background: '#000000',
+            text: '#FFFFFF',
+            primary: '#0A84FF',
+            card: '#1C1C1E',
+            border: '#3A3A3C',
+            notification: '#0A84FF',
+            textSecondary: '#AAAAAA',
+        },
+    },
 };

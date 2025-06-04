@@ -1,14 +1,29 @@
-import React from 'react';
-import {View, Text, TouchableOpacity, StyleSheet, Image, ScrollView} from 'react-native';
+import React, { useState } from 'react';
+import {
+    View,
+    Text,
+    TouchableOpacity,
+    StyleSheet,
+    Image,
+    ScrollView,
+    Modal,
+    Alert,
+    Dimensions
+} from 'react-native';
 import {useUser} from '../context/UserContext';
 import Header from "../components/ui/Header";
 import {DrawerActions, useNavigation} from "@react-navigation/native";
 import LoadingScreen from "../components/LoadingScreen";
 import { Ionicons } from '@expo/vector-icons';
+import {ListItem} from "../components/ui/ListItem";
 
-const ProfileScreen = () => {
+const { width } = Dimensions.get('window');
+
+const Profile = () => {
     const {user, loading, signIn, signOut} = useUser();
     const navigation = useNavigation();
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
+    const [signingOut, setSigningOut] = useState(false);
 
     if (loading) {
         return <LoadingScreen message="Loading profile..." />;
@@ -22,22 +37,92 @@ const ProfileScreen = () => {
         navigation.goBack();
     };
 
-    const showLogoutModal = () => {
-        // Implement your logout modal logic here
-        console.log("Show logout modal");
-    }
+    const handleShowLogoutModal = () => {
+        // Only show logout modal if user is authenticated
+        if (user) {
+            setShowLogoutModal(true);
+        } else {
+            // If no user is authenticated, show a message
+            Alert.alert(
+                "Not Signed In",
+                "You are not currently signed in to your account.",
+                [{ text: "OK", style: "default" }]
+            );
+        }
+    };
 
-    const ProfileItem = ({ icon, title, subtitle, onPress, rightElement }) => (
-        <TouchableOpacity style={styles.profileItem} onPress={onPress}>
-            <View style={styles.profileIcon}>
-                <Ionicons name={icon} size={22} color="#007AFF" />
+    const handleConfirmLogout = async () => {
+        setSigningOut(true);
+        try {
+            await signOut();
+            setShowLogoutModal(false);
+            // Optional: Show success message
+            Alert.alert(
+                "Signed Out",
+                "You have been successfully signed out.",
+                [{ text: "OK", style: "default" }]
+            );
+        } catch (error) {
+            console.error('Logout error:', error);
+            Alert.alert(
+                "Error",
+                "Failed to sign out. Please try again.",
+                [{ text: "OK", style: "default" }]
+            );
+        } finally {
+            setSigningOut(false);
+        }
+    };
+
+    const handleCancelLogout = () => {
+        setShowLogoutModal(false);
+    };
+
+    const LogoutModal = () => (
+        <Modal
+            animationType="fade"
+            transparent={true}
+            visible={showLogoutModal}
+            onRequestClose={handleCancelLogout}
+        >
+            <View style={styles.modalOverlay}>
+                <View style={styles.modalContainer}>
+                    <View style={styles.modalHeader}>
+                        <View style={styles.modalIconContainer}>
+                            <Ionicons name="log-out-outline" size={32} color="#FF3B30" />
+                        </View>
+                        <Text style={styles.modalTitle}>Sign Out</Text>
+                        <Text style={styles.modalMessage}>
+                            Are you sure you want to sign out of your account?
+                        </Text>
+                    </View>
+
+                    <View style={styles.modalButtons}>
+                        <TouchableOpacity
+                            style={styles.cancelButton}
+                            onPress={handleCancelLogout}
+                            disabled={signingOut}
+                        >
+                            <Text style={styles.cancelButtonText}>Cancel</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={[styles.confirmButton, signingOut && styles.disabledButton]}
+                            onPress={handleConfirmLogout}
+                            disabled={signingOut}
+                        >
+                            {signingOut ? (
+                                <View style={styles.loadingContainer}>
+                                    <Text style={styles.confirmButtonText}>Signing out...</Text>
+                                </View>
+                            ) : (
+                                <Text style={styles.confirmButtonText}>Sign Out</Text>
+                            )}
+                        </TouchableOpacity>
+                    </View>
+                </View>
             </View>
-            <View style={styles.profileContent}>
-                <Text style={styles.profileTitle}>{title}</Text>
-                {subtitle && <Text style={styles.profileSubtitle}>{subtitle}</Text>}
-            </View>
-            {rightElement || <Ionicons name="chevron-forward" size={20} color="#C7C7CC" />}
-        </TouchableOpacity>
+        </Modal>
     );
 
     return (
@@ -47,7 +132,7 @@ const ProfileScreen = () => {
                 showMenu
                 onBack={handleBack}
                 onMenu={handleMenuPress}
-                onMore={showLogoutModal}
+                onMore={handleShowLogoutModal}
             />
 
             <ScrollView style={styles.content}>
@@ -73,22 +158,16 @@ const ProfileScreen = () => {
                         {/* Account Information Section */}
                         <View style={styles.section}>
                             <Text style={styles.sectionTitle}>Account Information</Text>
-                            <ProfileItem
+                            <ListItem
                                 icon="person-outline"
                                 title="Display Name"
                                 subtitle={user.displayName || 'Not set'}
                                 onPress={() => {}}
                             />
-                            <ProfileItem
+                            <ListItem
                                 icon="mail-outline"
                                 title="Email"
                                 subtitle={user.email}
-                                onPress={() => {}}
-                            />
-                            <ProfileItem
-                                icon="key-outline"
-                                title="User ID"
-                                subtitle={user.uid}
                                 onPress={() => {}}
                             />
                         </View>
@@ -96,19 +175,19 @@ const ProfileScreen = () => {
                         {/* Account Actions Section */}
                         <View style={styles.section}>
                             <Text style={styles.sectionTitle}>Account Actions</Text>
-                            <ProfileItem
-                                icon="create-outline"
-                                title="Edit Profile"
-                                subtitle="Update your profile information"
+                            <ListItem
+                                icon="chatbubble-outline"
+                                title="View Feedback"
+                                subtitle="View your feedback and suggestions"
                                 onPress={() => {}}
                             />
-                            <ProfileItem
+                            <ListItem
                                 icon="shield-checkmark-outline"
                                 title="Privacy Settings"
                                 subtitle="Manage your privacy preferences"
                                 onPress={() => {}}
                             />
-                            <TouchableOpacity style={styles.signOutItem} onPress={signOut}>
+                            <TouchableOpacity style={styles.signOutItem} onPress={handleShowLogoutModal}>
                                 <View style={styles.signOutIcon}>
                                     <Ionicons name="log-out-outline" size={22} color="#FF3B30" />
                                 </View>
@@ -137,6 +216,9 @@ const ProfileScreen = () => {
                     </View>
                 )}
             </ScrollView>
+
+            {/* Logout Modal */}
+            <LogoutModal />
         </View>
     );
 }
@@ -148,6 +230,14 @@ const styles = StyleSheet.create({
     },
     content: {
         flex: 1,
+    },
+    profileContent:{
+        flex: 1,
+    },
+    profileSubtitle:{
+        fontSize: 14,
+        color: '#666',
+        marginTop: 2,
     },
     userHeaderContainer: {
         backgroundColor: 'white',
@@ -193,35 +283,6 @@ const styles = StyleSheet.create({
         marginLeft: 16,
         textTransform: 'uppercase',
         letterSpacing: 0.5,
-    },
-    profileItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: 'white',
-        padding: 16,
-        marginBottom: 1,
-    },
-    profileIcon: {
-        width: 32,
-        height: 32,
-        borderRadius: 6,
-        backgroundColor: '#F0F8FF',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginRight: 12,
-    },
-    profileContent: {
-        flex: 1,
-    },
-    profileTitle: {
-        fontSize: 16,
-        fontWeight: '500',
-        color: '#333',
-    },
-    profileSubtitle: {
-        fontSize: 14,
-        color: '#666',
-        marginTop: 2,
     },
     signOutItem: {
         flexDirection: 'row',
@@ -304,6 +365,93 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '600',
     },
+    // Modal Styles
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+    },
+    modalContainer: {
+        backgroundColor: 'white',
+        borderRadius: 16,
+        padding: 24,
+        width: width - 40,
+        maxWidth: 340,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 4,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 12,
+        elevation: 8,
+    },
+    modalHeader: {
+        alignItems: 'center',
+        marginBottom: 24,
+    },
+    modalIconContainer: {
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        backgroundColor: '#FFF0F0',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 16,
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: '#333',
+        marginBottom: 8,
+        textAlign: 'center',
+    },
+    modalMessage: {
+        fontSize: 16,
+        color: '#666',
+        textAlign: 'center',
+        lineHeight: 22,
+    },
+    modalButtons: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        gap: 12,
+    },
+    cancelButton: {
+        flex: 1,
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        backgroundColor: '#F5F5F5',
+        borderRadius: 8,
+        alignItems: 'center',
+    },
+    cancelButtonText: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#333',
+    },
+    confirmButton: {
+        flex: 1,
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        backgroundColor: '#FF3B30',
+        borderRadius: 8,
+        alignItems: 'center',
+    },
+    confirmButtonText: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: 'white',
+    },
+    disabledButton: {
+        backgroundColor: '#FF6B6B',
+        opacity: 0.7,
+    },
+    loadingContainer: {
+        alignItems: 'center',
+    },
 });
 
-export default ProfileScreen;
+export default Profile;

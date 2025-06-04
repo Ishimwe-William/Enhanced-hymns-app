@@ -20,8 +20,6 @@ export const usePreferences = () => {
 const DEFAULT_PREFERENCES = {
     fontSize: 'medium', // small, medium, large
     theme: 'light', // light, dark
-    playbackVolume: 80, // 0-100
-    autoPlay: false,
     offlineDownload: false,
     syncFavorites: true,
     notifications: {

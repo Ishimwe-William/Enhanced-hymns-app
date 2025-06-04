@@ -8,7 +8,7 @@ import {
 import {useHymns} from '../../../context/HymnContext';
 import FloatingButton from '../../ui/FloatingButton';
 
-const HymnControls = ({hymn}) => {
+const HymnControls = ({hymn, onNext, onPrevious, onShare}) => {
     const {toggleFavorite, isFavorite} = useHymns();
     const [isExpanded, setIsExpanded] = useState(false);
     const animatedHeight = useRef(new Animated.Value(0)).current;
@@ -51,18 +51,6 @@ const HymnControls = ({hymn}) => {
         }
     };
 
-    const handleShare = () => {
-        Alert.alert('Share', 'Share feature coming soon!');
-    };
-
-    const handleMore = () => {
-        Alert.alert('More Options', 'Additional options coming soon!');
-    };
-
-    const handleTranspose = () => {
-        Alert.alert('Transpose', 'Key transposition feature coming soon!');
-    };
-
     const handleFont = () => {
         Alert.alert('Font Size', 'Font size adjustment coming soon!');
     };
@@ -75,6 +63,20 @@ const HymnControls = ({hymn}) => {
 
     const controlButtons = [
         {
+            name: 'chevron-back-outline',
+            size: 28,
+            color: '#666',
+            onPress: onPrevious,
+            label: 'More',
+        },
+        {
+            name: 'text-outline',
+            size: 28,
+            color: '#666',
+            onPress: handleFont,
+            label: 'Font',
+        },
+        {
             name: isHymnFavorite ? 'heart' : 'heart-outline',
             size: 28,
             color: isHymnFavorite ? '#FF3B30' : '#666',
@@ -85,28 +87,14 @@ const HymnControls = ({hymn}) => {
             name: 'share-social-outline',
             size: 28,
             color: '#666',
-            onPress: handleShare,
+            onPress: onShare,
             label: 'Share',
         },
         {
-            name: 'musical-notes-outline',
+            name: 'chevron-forward-outline',
             size: 28,
             color: '#666',
-            onPress: handleTranspose,
-            label: 'Transpose',
-        },
-        {
-            name: 'text-outline',
-            size: 28,
-            color: '#666',
-            onPress: handleFont,
-            label: 'Font',
-        },
-        {
-            name: 'ellipsis-horizontal',
-            size: 28,
-            color: '#666',
-            onPress: handleMore,
+            onPress: onNext,
             label: 'More',
         },
     ];

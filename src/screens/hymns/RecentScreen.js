@@ -7,13 +7,101 @@ import HymnListView from '../../components/hymns/list/HymnListView';
 import EmptyState from '../../components/EmptyState';
 import {useHymns} from '../../context/HymnContext';
 import {useUser} from '../../context/UserContext';
-import {Colors} from '../../utils/colors';
 import WarningBanner from "../../components/ui/WarningBanner";
+import {useTheme} from "../../context/ThemeContext";
 
 const RecentScreen = () => {
     const navigation = useNavigation();
     const {recentHymns, clearRecentHymns, isLoggedIn} = useHymns();
     const {user, signIn} = useUser();
+    const {theme} = useTheme()
+    const colors = theme.colors;
+
+    const styles = StyleSheet.create({
+        container: {
+            flex: 1,
+            backgroundColor: '#f5f5f5',
+        },
+        modalContainer: {
+            alignItems: 'stretch',
+            minWidth: 280,
+        },
+        modalTitle: {
+            fontSize: 18,
+            fontWeight: '600',
+            marginBottom: 16,
+            color: colors.text,
+            textAlign: 'center',
+        },
+        modalOption: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingVertical: 12,
+            paddingHorizontal: 16,
+            borderRadius: 8,
+            marginBottom: 4,
+        },
+        modalOptionText: {
+            fontSize: 16,
+            marginLeft: 12,
+            flex: 1,
+        },
+        cancelOption: {
+            marginTop: 8,
+            borderTopWidth: 1,
+            borderTopColor: colors.border,
+            paddingTop: 12,
+        },
+        modalDivider: {
+            height: 1,
+            backgroundColor: colors.border,
+            marginVertical: 8,
+        },
+        userInfo: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingVertical: 8,
+            paddingHorizontal: 16,
+        },
+        userInfoText: {
+            fontSize: 14,
+            marginLeft: 8,
+            color: colors.textSecondary,
+            flex: 1,
+        },
+        warningInfo: {
+            flexDirection: 'row',
+            alignItems: 'flex-start',
+            paddingVertical: 8,
+            paddingHorizontal: 16,
+        },
+        warningText: {
+            fontSize: 12,
+            marginLeft: 8,
+            color: colors.textSecondary,
+            flex: 1,
+            lineHeight: 16,
+        },
+        guestBannerText: {
+            flex: 1,
+            marginLeft: 8,
+            marginRight: 12,
+            fontSize: 14,
+            color: colors.info,
+        },
+        signInButton: {
+            backgroundColor: colors.primary,
+            paddingHorizontal: 12,
+            paddingVertical: 6,
+            borderRadius: 6,
+        },
+        signInButtonText: {
+            color: 'white',
+            fontSize: 12,
+            fontWeight: '600',
+        },
+    });
+
 
     const handleMenuPress = () => {
         navigation.dispatch(DrawerActions.openDrawer());
@@ -87,12 +175,12 @@ const RecentScreen = () => {
                         <Ionicons
                             name="trash-outline"
                             size={20}
-                            color={recentHymns.length === 0 ? Colors.disabled : Colors.error}
+                            color={recentHymns.length === 0 ? colors.disabled : colors.error}
                         />
                         <Text style={[
                             styles.modalOptionText,
                             {
-                                color: recentHymns.length === 0 ? Colors.disabled : Colors.error
+                                color: recentHymns.length === 0 ? colors.disabled : colors.error
                             }
                         ]}>
                             Clear Recent Hymns
@@ -106,8 +194,8 @@ const RecentScreen = () => {
                             navigation.navigate('Settings');
                         }}
                     >
-                        <Ionicons name="settings-outline" size={20} color={Colors.primary}/>
-                        <Text style={[styles.modalOptionText, {color: Colors.primary}]}>
+                        <Ionicons name="settings-outline" size={20} color={colors.primary}/>
+                        <Text style={[styles.modalOptionText, {color: colors.primary}]}>
                             Sync Settings
                         </Text>
                     </TouchableOpacity>
@@ -115,7 +203,7 @@ const RecentScreen = () => {
                     <View style={styles.modalDivider}/>
 
                     <View style={styles.userInfo}>
-                        <Ionicons name="person-circle-outline" size={20} color={Colors.textSecondary}/>
+                        <Ionicons name="person-circle-outline" size={20} color={theme.textSecondary}/>
                         <Text style={styles.userInfoText}>
                             Signed in as {user?.displayName || user?.email}
                         </Text>
@@ -131,8 +219,8 @@ const RecentScreen = () => {
                             handleSignInPrompt();
                         }}
                     >
-                        <Ionicons name="log-in-outline" size={20} color={Colors.primary}/>
-                        <Text style={[styles.modalOptionText, {color: Colors.primary}]}>
+                        <Ionicons name="log-in-outline" size={20} color={colors.primary}/>
+                        <Text style={[styles.modalOptionText, {color: colors.primary}]}>
                             Sign In to Save Data
                         </Text>
                     </TouchableOpacity>
@@ -148,12 +236,12 @@ const RecentScreen = () => {
                         <Ionicons
                             name="trash-outline"
                             size={20}
-                            color={recentHymns.length === 0 ? Colors.disabled : Colors.error}
+                            color={recentHymns.length === 0 ? colors.disabled : colors.error}
                         />
                         <Text style={[
                             styles.modalOptionText,
                             {
-                                color: recentHymns.length === 0 ? Colors.disabled : Colors.error
+                                color: recentHymns.length === 0 ? colors.disabled : colors.error
                             }
                         ]}>
                             Clear Recent Hymns
@@ -163,7 +251,7 @@ const RecentScreen = () => {
                     <View style={styles.modalDivider}/>
 
                     <View style={styles.warningInfo}>
-                        <Ionicons name="warning-outline" size={16} color={Colors.warning}/>
+                        <Ionicons name="warning-outline" size={16} color={colors.warning}/>
                         <Text style={styles.warningText}>
                             Your data is only stored locally. Sign in to backup across devices.
                         </Text>
@@ -175,8 +263,8 @@ const RecentScreen = () => {
                 style={[styles.modalOption, styles.cancelOption]}
                 onPress={closeModal}
             >
-                <Ionicons name="close-outline" size={20} color={Colors.textSecondary}/>
-                <Text style={[styles.modalOptionText, {color: Colors.textSecondary}]}>
+                <Ionicons name="close-outline" size={20} color={colors.textSecondary}/>
+                <Text style={[styles.modalOptionText, {color: colors.textSecondary}]}>
                     Cancel
                 </Text>
             </TouchableOpacity>
@@ -219,89 +307,5 @@ const RecentScreen = () => {
     );
 };
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#f5f5f5',
-    },
-    modalContainer: {
-        alignItems: 'stretch',
-        minWidth: 280,
-    },
-    modalTitle: {
-        fontSize: 18,
-        fontWeight: '600',
-        marginBottom: 16,
-        color: Colors.text,
-        textAlign: 'center',
-    },
-    modalOption: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: 12,
-        paddingHorizontal: 16,
-        borderRadius: 8,
-        marginBottom: 4,
-    },
-    modalOptionText: {
-        fontSize: 16,
-        marginLeft: 12,
-        flex: 1,
-    },
-    cancelOption: {
-        marginTop: 8,
-        borderTopWidth: 1,
-        borderTopColor: Colors.border,
-        paddingTop: 12,
-    },
-    modalDivider: {
-        height: 1,
-        backgroundColor: Colors.border,
-        marginVertical: 8,
-    },
-    userInfo: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: 8,
-        paddingHorizontal: 16,
-    },
-    userInfoText: {
-        fontSize: 14,
-        marginLeft: 8,
-        color: Colors.textSecondary,
-        flex: 1,
-    },
-    warningInfo: {
-        flexDirection: 'row',
-        alignItems: 'flex-start',
-        paddingVertical: 8,
-        paddingHorizontal: 16,
-    },
-    warningText: {
-        fontSize: 12,
-        marginLeft: 8,
-        color: Colors.textSecondary,
-        flex: 1,
-        lineHeight: 16,
-    },
-    guestBannerText: {
-        flex: 1,
-        marginLeft: 8,
-        marginRight: 12,
-        fontSize: 14,
-        color: Colors.infoDark,
-    },
-    signInButton: {
-        backgroundColor: Colors.primary500,
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 6,
-    },
-    signInButtonText: {
-        color: 'white',
-        fontSize: 12,
-        fontWeight: '600',
-    },
-});
 
 export default RecentScreen;

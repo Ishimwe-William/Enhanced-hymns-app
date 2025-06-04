@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useNavigation, DrawerActions } from '@react-navigation/native';
 import Header from '../components/ui/Header';
+import {MyConstants} from "../utils/constants";
 
 const AboutScreen = () => {
     const navigation = useNavigation();
@@ -24,8 +25,8 @@ const AboutScreen = () => {
             />
             <ScrollView style={styles.content}>
                 <View style={styles.section}>
-                    <Text style={styles.appName}>Hymns Collection</Text>
-                    <Text style={styles.version}>Version 1.0.0</Text>
+                    <Text style={styles.appName}>{MyConstants.AppName}</Text>
+                    <Text style={styles.version}>Version {MyConstants.AppVersion}</Text>
                 </View>
 
                 <View style={styles.section}>
@@ -48,7 +49,7 @@ const AboutScreen = () => {
 
                 <View style={styles.section}>
                     <Text style={styles.copyright}>
-                        `© {new Date().getFullYear()} Hymns Collection. All rights reserved.`
+                        © {new Date().getFullYear()} Hymns Collection. All rights reserved.
                     </Text>
                 </View>
             </ScrollView>

@@ -6,8 +6,6 @@ import Header from '../../components/ui/Header';
 
 const categories = [
     { id: '1', name: 'Praise & Worship', icon: 'musical-notes', count: 45 },
-    { id: '2', name: 'Christmas', icon: 'gift', count: 23 },
-    { id: '3', name: 'Easter', icon: 'flower', count: 18 },
     { id: '4', name: 'Traditional', icon: 'library', count: 67 },
     { id: '5', name: 'Contemporary', icon: 'headset', count: 34 },
     { id: '6', name: 'Communion', icon: 'wine', count: 12 },

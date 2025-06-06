@@ -1,55 +1,82 @@
-import React, {useCallback, useEffect, useState} from "react";
-import {View} from "react-native";
+import React, { useCallback, useEffect, useState } from "react";
+import { View } from "react-native";
 import * as SplashScreen from "expo-splash-screen";
-import {init} from "./src/services/localHymnService";
+import { useFonts } from "expo-font";
 
-import {ThemeProvider} from './src/context/ThemeContext';
-import {UserProvider} from "./src/context/UserContext";
-import {PreferencesProvider} from "./src/context/PreferencesContext";
-import {HymnProvider} from './src/context/HymnContext';
+import { init } from "./src/services/localHymnService";
 
+import { FontProvider } from "./src/context/FontContext";
+import { ThemeProvider } from './src/context/ThemeContext';
+import { UserProvider, useUser } from "./src/context/UserContext";
+import { PreferencesProvider } from "./src/context/PreferencesContext";
+import { HymnProvider } from './src/context/HymnContext';
 import ThemedApp from './src/ThemedApp';
 
 SplashScreen.preventAutoHideAsync();
 
-export default function App() {
-    const [appIsReady, setAppIsReady] = useState(false);
+function AppContent({ onAppReady }) {
+    const { loading: userLoading, authInitialized } = useUser();
+    const [dbInitialized, setDbInitialized] = useState(false);
 
     useEffect(() => {
-        async function prepare() {
+        const prepareDb = async () => {
             try {
                 await init();
-            } catch (error) {
-                console.warn("Database init failed:", error);
-            } finally {
-                setAppIsReady(true);
+                setDbInitialized(true);
+            } catch (e) {
+                console.warn("DB init error:", e);
+                setDbInitialized(true); // continue even if it fails
             }
-        }
-
-        prepare();
+        };
+        prepareDb();
     }, []);
 
-    const onLayoutRootView = useCallback(() => {
-        if (appIsReady) {
-            SplashScreen.hideAsync();
+    useEffect(() => {
+        if (dbInitialized && authInitialized) {
+            onAppReady();
         }
-    }, [appIsReady]);
-
-    if (!appIsReady) {
-        return null;
-    }
+    }, [dbInitialized, authInitialized]);
 
     return (
-        <View style={{flex: 1}} onLayout={onLayoutRootView}>
-            <UserProvider>
-                <ThemeProvider>
-                    <PreferencesProvider>
-                        <HymnProvider>
-                            <ThemedApp/>
-                        </HymnProvider>
-                    </PreferencesProvider>
-                </ThemeProvider>
-            </UserProvider>
+        <View style={{ flex: 1 }}>
+            <ThemeProvider>
+                <PreferencesProvider>
+                    <HymnProvider>
+                        <ThemedApp />
+                    </HymnProvider>
+                </PreferencesProvider>
+            </ThemeProvider>
         </View>
+    );
+}
+
+export default function App() {
+    const [fontsLoaded] = useFonts({
+        'Matura MT Script Capitals': require('./assets/fonts/MATURASC.ttf'),
+    });
+
+    const [appReady, setAppReady] = useState(false);
+
+    const onAppReady = useCallback(() => {
+        setAppReady(true);
+    }, []);
+
+    useEffect(() => {
+        const maybeHide = async () => {
+            if (fontsLoaded && appReady) {
+                await SplashScreen.hideAsync();
+            }
+        };
+        maybeHide();
+    }, [fontsLoaded, appReady]);
+
+    if (!fontsLoaded) return null;
+
+    return (
+        <UserProvider>
+            <FontProvider>
+                <AppContent onAppReady={onAppReady} />
+            </FontProvider>
+        </UserProvider>
     );
 }

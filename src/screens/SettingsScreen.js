@@ -12,6 +12,7 @@ import {useTheme} from "../context/ThemeContext";
 const SettingsScreen = () => {
     const navigation = useNavigation();
     const { theme, themeMode, toggleTheme } = useTheme();
+    const colors = theme.colors;
     const {signIn} = useUser();
 
     const {
@@ -86,6 +87,30 @@ const SettingsScreen = () => {
         return theme.charAt(0).toUpperCase() + theme.slice(1);
     };
 
+
+    const styles = StyleSheet.create({
+        container: {
+            flex: 1,
+            backgroundColor: colors.card
+        },
+        content: {
+            flex: 1,
+        },
+        section: {
+            marginVertical: 22,
+            marginHorizontal: 16,
+        },
+        sectionTitle: {
+            fontSize: 14,
+            fontWeight: '600',
+            color: colors.textSecondary,
+            marginBottom: 8,
+            marginLeft: 16,
+            textTransform: 'uppercase',
+            letterSpacing: 0.5,
+        }
+    });
+
     return (
         <View style={styles.container}>
             <Header
@@ -93,6 +118,7 @@ const SettingsScreen = () => {
                 showMenu
                 onBack={handleBack}
                 onMenu={handleMenuPress}
+                showMore={false}
             />
             <ScrollView style={styles.content}>
                 {!isLoggedIn && (
@@ -206,27 +232,5 @@ const SettingsScreen = () => {
     );
 };
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#f5f5f5',
-    },
-    content: {
-        flex: 1,
-    },
-    section: {
-        marginTop: 32,
-        marginHorizontal: 16,
-    },
-    sectionTitle: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#666',
-        marginBottom: 8,
-        marginLeft: 16,
-        textTransform: 'uppercase',
-        letterSpacing: 0.5,
-    }
-});
 
 export default SettingsScreen;

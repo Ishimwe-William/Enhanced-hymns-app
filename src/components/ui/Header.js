@@ -24,14 +24,15 @@ const Header = ({
                     onMore,
                     showMore = true,
                     moreIcon = "ellipsis-vertical",
-                    modalContent // New prop for modal content
+                    modalContent
                 }) => {
     const [modalVisible, setModalVisible] = useState(false);
     const {theme} = useTheme();
+    const colors = theme.colors;
 
     const styles = StyleSheet.create({
         header: {
-            backgroundColor: theme.colors.primary,
+            backgroundColor: colors.primary,
             paddingHorizontal: 16,
             paddingVertical: 8,
             flexDirection: 'row',
@@ -50,7 +51,7 @@ const Header = ({
             justifyContent: 'flex-end',
         },
         title: {
-            color: 'white',
+            color: colors.text ,
             fontSize: 20,
             flex: 4,
             fontWeight: '600',
@@ -70,13 +71,13 @@ const Header = ({
             alignItems: 'center',
         },
         modalContent: {
-            backgroundColor: 'white',
+            backgroundColor: colors.card ?? colors.background,
             borderRadius: 12,
             padding: 20,
             minWidth: screenWidth * 0.8,
             maxWidth: screenWidth * 0.9,
             maxHeight: screenHeight * 0.8,
-            shadowColor: '#000',
+            shadowColor: theme.dark ? '#222' : '#000',
             shadowOffset: {
                 width: 0,
                 height: 2,
@@ -86,7 +87,6 @@ const Header = ({
             elevation: 5,
         },
     });
-
 
     const handleMorePress = () => {
         if (modalContent) {
@@ -107,12 +107,12 @@ const Header = ({
                 <View style={styles.leftSection}>
                     {showMenu && (
                         <TouchableOpacity style={styles.iconButton} onPress={onMenu}>
-                            <Ionicons name="menu" size={24} color="white"/>
+                            <Ionicons name="menu" size={24} color={colors.textSecondary}/>
                         </TouchableOpacity>
                     )}
                     {showBack && (
                         <TouchableOpacity style={styles.backButton} onPress={onBack}>
-                            <Ionicons name="arrow-back" size={24} color="white"/>
+                            <Ionicons name="arrow-back" size={24} color={colors.textSecondary}/>
                         </TouchableOpacity>
                     )}
                 </View>
@@ -122,12 +122,12 @@ const Header = ({
                 <View style={styles.rightSection}>
                     {showRefresh && (
                         <TouchableOpacity style={styles.iconButton} onPress={onRefresh}>
-                            <Ionicons name="refresh" size={24} color="white"/>
+                            <Ionicons name="refresh" size={24} color={colors.textSecondary}/>
                         </TouchableOpacity>
                     )}
                     {showMore && (
                         <TouchableOpacity style={styles.iconButton} onPress={handleMorePress}>
-                            <Ionicons name={moreIcon} size={24} color="white"/>
+                            <Ionicons name={moreIcon} size={24} color={colors.textSecondary}/>
                         </TouchableOpacity>
                     )}
                 </View>

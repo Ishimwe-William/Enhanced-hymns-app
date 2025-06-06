@@ -35,6 +35,7 @@ const FavoritesScreen = () => {
                 showMenu
                 onBack={handleBack}
                 onMenu={handleMenuPress}
+                showMore={false}
             />
             {favorites.length === 0 ? (
                 <EmptyState

@@ -18,6 +18,7 @@ export const usePreferences = () => {
 };
 
 const DEFAULT_PREFERENCES = {
+    version: 1,
     fontSize: 'medium', // small, medium, large
     theme: 'light', // light, dark
     offlineDownload: false,
@@ -45,54 +46,54 @@ export const PreferencesProvider = ({ children }) => {
 
     // Load preferences when user changes
     useEffect(() => {
+        let isCancelled = false;
+
         const loadPreferences = async () => {
             setLoading(true);
             try {
                 if (user?.uid) {
-                    // Load user-specific preferences from local storage first
                     const storageKey = getStorageKey(user.uid);
                     const storedPrefs = await SecureStore.getItemAsync(storageKey);
+                    if (isCancelled) return;
 
-                    let localPreferences = DEFAULT_PREFERENCES;
-                    if (storedPrefs) {
-                        const parsedPrefs = JSON.parse(storedPrefs);
-                        localPreferences = { ...DEFAULT_PREFERENCES, ...parsedPrefs };
-                    }
-
-                    // Set local preferences immediately for better UX
+                    // Merge with defaults
+                    let localPreferences = { ...DEFAULT_PREFERENCES, ...(storedPrefs ? JSON.parse(storedPrefs) : {}) };
                     setPreferences(localPreferences);
 
-                    // Try to sync with cloud if sync is enabled
                     if (localPreferences.syncFavorites) {
                         try {
                             setSyncing(true);
                             const syncedPreferences = await syncPreferences(user.uid, localPreferences);
+                            if (isCancelled) return;
 
-                            // Update local storage and state with synced preferences
                             if (JSON.stringify(syncedPreferences) !== JSON.stringify(localPreferences)) {
                                 setPreferences(syncedPreferences);
                                 await SecureStore.setItemAsync(storageKey, JSON.stringify(syncedPreferences));
                             }
-                        } catch (syncError) {
+                        } catch (err) {
                             console.log('Sync failed, using local preferences');
                         } finally {
                             setSyncing(false);
                         }
                     }
                 } else {
-                    // No user logged in - use defaults without saving
                     setPreferences(DEFAULT_PREFERENCES);
                 }
-            } catch (error) {
-                console.error('Error loading preferences:', error);
+            } catch (err) {
+                console.error('Error loading preferences:', err);
                 setPreferences(DEFAULT_PREFERENCES);
             } finally {
-                setLoading(false);
+                if (!isCancelled) setLoading(false);
             }
         };
 
         loadPreferences();
+
+        return () => {
+            isCancelled = true;
+        };
     }, [user?.uid]);
+
 
     // Save preferences to secure store and optionally to cloud
     const savePreferences = async (newPreferences) => {

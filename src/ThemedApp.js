@@ -1,16 +1,18 @@
 import React from 'react';
-import {StatusBar} from 'expo-status-bar';
+import { StatusBar } from 'expo-status-bar';
 import {
     NavigationContainer,
     DefaultTheme as NavDefaultTheme,
-    DarkTheme as NavDarkTheme
+    DarkTheme as NavDarkTheme,
 } from '@react-navigation/native';
-import {useTheme} from './context/ThemeContext';
+import { useTheme } from './context/ThemeContext';
 import DrawerNavigator from './navigations/DrawerNavigator';
-import {SafeAreaView} from "react-native-safe-area-context";
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import {  StyleSheet } from 'react-native';
 
 export default function ThemedApp() {
-    const {theme, themeMode} = useTheme();
+    const { theme, themeMode } = useTheme();
+    const colors = theme.colors;
 
     const navTheme = themeMode === 'dark'
         ? {
@@ -18,12 +20,7 @@ export default function ThemedApp() {
             dark: true,
             colors: {
                 ...NavDarkTheme.colors,
-                primary: theme.colors.primary,
-                background: theme.colors.background,
-                card: theme.colors.card,
-                text: theme.colors.text,
-                border: theme.colors.border,
-                notification: theme.colors.notification,
+                ...colors, // overrides all with your custom theme
             },
         }
         : {
@@ -31,21 +28,27 @@ export default function ThemedApp() {
             dark: false,
             colors: {
                 ...NavDefaultTheme.colors,
-                primary: theme.colors.primary,
-                background: theme.colors.background,
-                card: theme.colors.card,
-                text: theme.colors.text,
-                border: theme.colors.border,
-                notification: theme.colors.notification,
+                ...colors, // overrides all with your custom theme
             },
         };
 
     return (
-        <SafeAreaView style={{flex: 1}}>
-            <NavigationContainer theme={navTheme}>
-                <StatusBar backgroundColor={"#00428a"} barStyle="light-content"/>
-                <DrawerNavigator/>
-            </NavigationContainer>
-        </SafeAreaView>
+        <SafeAreaProvider>
+            <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+                <NavigationContainer theme={navTheme}>
+                    <StatusBar
+                        backgroundColor={colors.primary}
+                        style={themeMode === 'dark' ? 'light' : 'dark'}
+                    />
+                    <DrawerNavigator />
+                </NavigationContainer>
+            </SafeAreaView>
+        </SafeAreaProvider>
     );
 }
+
+const styles = StyleSheet.create({
+    safeArea: {
+        flex: 1,
+    },
+});

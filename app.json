@@ -5,16 +5,27 @@
     "version": "1.0.0",
     "backgroundColor": "#ffffff",
     "userInterfaceStyle": "automatic",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
     "assetBundlePatterns": [
       "**/*"
     ],
-    "scheme": "hymnsapp",
+    "scheme": "com.bunsenplus.hymnsapp",
     "android": {
-      "package": "com.bunsenplus.hymnsapp"
+      "package": "com.bunsenplus.hymnsapp",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      }
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.bunsenplus.hymnsapp"
+      "bundleIdentifier": "com.bunsenplus.hymnsapp",
+      "icon": "./assets/icon.png"
     },
     "extra": {
       "eas": {

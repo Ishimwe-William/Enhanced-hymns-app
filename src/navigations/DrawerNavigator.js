@@ -16,31 +16,35 @@ export default function DrawerNavigator() {
     const { theme } = useTheme();
     const { colors } = theme;
 
+    const screenOptions = {
+        headerShown: false,
+        drawerStyle: {
+            backgroundColor: colors.card,
+            width: 280,
+        },
+        drawerActiveTintColor: colors.header,
+        drawerInactiveTintColor: colors.textSecondary,
+        drawerLabelStyle: {
+            fontSize: 16,
+            fontWeight: '500',
+        },
+    };
+
+    const createDrawerIcon = (iconName) => ({ color, size }) => (
+        <Ionicons name={iconName} size={size} color={color} />
+    );
+
     return (
         <Drawer.Navigator
             drawerContent={(props) => <CustomDrawerContent {...props} />}
-            screenOptions={{
-                headerShown: false,
-                drawerStyle: {
-                    backgroundColor: colors.card,
-                    width: 280,
-                },
-                drawerActiveTintColor: colors.primary,
-                drawerInactiveTintColor: colors.textSecondary || colors.text,
-                drawerLabelStyle: {
-                    fontSize: 16,
-                    fontWeight: '500',
-                },
-            }}
+            screenOptions={screenOptions}
         >
             <Drawer.Screen
                 name="MainTabs"
                 component={TabNavigator}
                 options={{
                     drawerLabel: 'Home',
-                    drawerIcon: ({ color, size }) => (
-                        <Ionicons name="home-outline" size={size} color={color} />
-                    ),
+                    drawerIcon: createDrawerIcon('home-outline'),
                 }}
             />
             <Drawer.Screen
@@ -48,9 +52,7 @@ export default function DrawerNavigator() {
                 component={FavoritesScreen}
                 options={{
                     drawerLabel: 'Favorites',
-                    drawerIcon: ({ color, size }) => (
-                        <Ionicons name="heart-outline" size={size} color={color} />
-                    ),
+                    drawerIcon: createDrawerIcon('heart-outline'),
                 }}
             />
             <Drawer.Screen
@@ -58,9 +60,7 @@ export default function DrawerNavigator() {
                 component={SettingsScreen}
                 options={{
                     drawerLabel: 'Settings',
-                    drawerIcon: ({ color, size }) => (
-                        <Ionicons name="settings-outline" size={size} color={color} />
-                    ),
+                    drawerIcon: createDrawerIcon('settings-outline'),
                 }}
             />
             <Drawer.Screen
@@ -68,9 +68,7 @@ export default function DrawerNavigator() {
                 component={ProfileScreen}
                 options={{
                     drawerLabel: 'Profile',
-                    drawerIcon: ({ color, size }) => (
-                        <Ionicons name="person-outline" size={size} color={color} />
-                    ),
+                    drawerIcon: createDrawerIcon('person-outline'),
                 }}
             />
             <Drawer.Screen
@@ -78,9 +76,7 @@ export default function DrawerNavigator() {
                 component={AboutScreen}
                 options={{
                     drawerLabel: 'About',
-                    drawerIcon: ({ color, size }) => (
-                        <Ionicons name="information-circle-outline" size={size} color={color} />
-                    ),
+                    drawerIcon: createDrawerIcon('information-circle-outline'),
                 }}
             />
         </Drawer.Navigator>

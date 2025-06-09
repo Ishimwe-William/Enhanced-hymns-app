@@ -37,6 +37,7 @@ const HymnsList = () => {
                 showRefresh
                 onMenu={handleMenuPress}
                 onRefresh={loadHymns}
+                showMore={false}
             />
             <SearchBar
                 value={searchQuery}

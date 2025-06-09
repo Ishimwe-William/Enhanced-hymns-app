@@ -7,7 +7,7 @@ export const ConnectIcon = ({name, icon, onPress}) => {
 
     const styles = StyleSheet.create({
         text: {
-            color: colors.textSecondary,
+            color: colors.header,
             fontSize: 16,
         },
         card: {
@@ -26,7 +26,7 @@ export const ConnectIcon = ({name, icon, onPress}) => {
             <MaterialCommunityIcons
                 name={icon}
                 size={38}
-                color={colors.textSecondary}
+                color={colors.header}
             />
             <Text style={styles.text}>{name}</Text>
         </TouchableOpacity>

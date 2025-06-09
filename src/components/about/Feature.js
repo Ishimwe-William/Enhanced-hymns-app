@@ -32,7 +32,7 @@ export const Feature = ({title, icon, children}) => {
     });
     return (
         <View style={styles.featureContainer}>
-            <MaterialCommunityIcons name={icon} size={24} color="#FF9800" style={styles.icon}/>
+            <MaterialCommunityIcons name={icon} size={24} color={colors.header} style={styles.icon}/>
             <View>
                 <Text style={styles.title}>{title}</Text>
                 <Text style={styles.description}>{children}</Text>

@@ -1,7 +1,28 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import {useTheme} from "../../../context/ThemeContext";
 
 const StanzaView = ({ stanza }) => {
+    const {colors} = useTheme().theme;
+
+    const styles = StyleSheet.create({
+        container: {
+            marginBottom: 24,
+            alignItems: "center",
+        },
+        title: {
+            fontSize: 16,
+            fontWeight: '600',
+            color: colors.text,
+            marginBottom: 8,
+        },
+        text: {
+            fontSize: 18,
+            lineHeight: 28,
+            color: colors.textSecondary,
+        },
+    });
+
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Stanza {stanza.stanzaNumber}</Text>
@@ -10,22 +31,5 @@ const StanzaView = ({ stanza }) => {
     );
 };
 
-const styles = StyleSheet.create({
-    container: {
-        marginBottom: 24,
-        alignItems: "center",
-    },
-    title: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#666',
-        marginBottom: 8,
-    },
-    text: {
-        fontSize: 18,
-        lineHeight: 28,
-        color: '#333',
-    },
-});
 
 export default StanzaView;

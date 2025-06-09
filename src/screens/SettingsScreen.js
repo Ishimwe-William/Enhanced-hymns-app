@@ -22,9 +22,12 @@ const SettingsScreen = () => {
         handleForceSyncWithCloud,
         resetPreferences,
         isLoggedIn,
-        syncing
+        syncing,
+        loading,
+        dbInitialized
     } = usePreferences();
-    const [loading, setLoading] = useState(false);
+
+    const [settingsLoading, setSettingsLoading] = useState(false);
 
     useEffect(() => {
         if (preferences.theme && preferences.theme !== themeMode) {
@@ -40,23 +43,52 @@ const SettingsScreen = () => {
         navigation.goBack();
     };
 
-    const handleFontSizeChange = () => {
-        const sizes = ['small', 'medium', 'large'];
-        const currentIndex = sizes.indexOf(preferences.fontSize);
-        const nextIndex = (currentIndex + 1) % sizes.length;
-        updatePreference('fontSize', sizes[nextIndex]);
+    const handleFontSizeChange = async () => {
+        try {
+            const sizes = ['small', 'medium', 'large'];
+            const currentIndex = sizes.indexOf(preferences.fontSize);
+            const nextIndex = (currentIndex + 1) % sizes.length;
+            await updatePreference('fontSize', sizes[nextIndex]);
+        } catch (error) {
+            Alert.alert('Error', 'Failed to update font size');
+        }
     };
 
-    const handleThemeChange = () => {
-        toggleTheme();
-        const newTheme = preferences.theme === 'light' ? 'dark' : 'light';
-        updatePreference('theme', newTheme);
+    const handleThemeChange = async () => {
+        try {
+            toggleTheme();
+            const newTheme = preferences.theme === 'light' ? 'dark' : 'light';
+            await updatePreference('theme', newTheme);
+        } catch (error) {
+            Alert.alert('Error', 'Failed to update theme');
+        }
+    };
+
+    const handleSyncWithCloud = async () => {
+        if (!isLoggedIn) {
+            Alert.alert('Sign In Required', 'Please sign in to sync with cloud');
+            return;
+        }
+
+        try {
+            setSettingsLoading(true);
+            const success = await handleForceSyncWithCloud();
+            if (success) {
+                Alert.alert('Success', 'Settings synced from cloud successfully');
+            } else {
+                Alert.alert('Info', 'No cloud settings found or settings are up to date');
+            }
+        } catch (error) {
+            Alert.alert('Error', 'Failed to sync with cloud: ' + error.message);
+        } finally {
+            setSettingsLoading(false);
+        }
     };
 
     const handleResetSettings = () => {
         Alert.alert(
             'Reset Settings',
-            'Are you sure you want to reset all settings to defaults?',
+            'Are you sure you want to reset all settings to defaults? This will also clear local database preferences.',
             [
                 {text: 'Cancel', style: 'cancel'},
                 {
@@ -64,13 +96,13 @@ const SettingsScreen = () => {
                     style: 'destructive',
                     onPress: async () => {
                         try {
-                            setLoading(true);
+                            setSettingsLoading(true);
                             await resetPreferences();
                             Alert.alert('Success', 'Settings have been reset to defaults');
                         } catch (error) {
-                            Alert.alert('Error', 'Failed to reset settings');
+                            Alert.alert('Error', 'Failed to reset settings: ' + error.message);
                         } finally {
-                            setLoading(false);
+                            setSettingsLoading(false);
                         }
                     }
                 }
@@ -78,6 +110,20 @@ const SettingsScreen = () => {
         );
     };
 
+    const handleOfflineDownloadChange = async (value) => {
+        try {
+            await updatePreference('offlineDownload', value);
+            if (value) {
+                Alert.alert(
+                    'Offline Download Enabled',
+                    'Hymns will be downloaded for offline use. This may take some time.',
+                    [{text: 'OK'}]
+                );
+            }
+        } catch (error) {
+            Alert.alert('Error', 'Failed to update offline download setting');
+        }
+    };
 
     const formatFontSize = (size) => {
         return size.charAt(0).toUpperCase() + size.slice(1);
@@ -86,7 +132,6 @@ const SettingsScreen = () => {
     const formatTheme = (theme) => {
         return theme.charAt(0).toUpperCase() + theme.slice(1);
     };
-
 
     const styles = StyleSheet.create({
         container: {
@@ -108,8 +153,28 @@ const SettingsScreen = () => {
             marginLeft: 16,
             textTransform: 'uppercase',
             letterSpacing: 0.5,
+        },
+        loadingContainer: {
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: colors.card
+        },
+        loadingText: {
+            marginTop: 16,
+            fontSize: 16,
+            color: colors.text
         }
     });
+
+    // Show loading screen while database is initializing
+    if (!dbInitialized || loading) {
+        return (
+            <View style={styles.loadingContainer}>
+                <Text style={styles.loadingText}>Loading Settings...</Text>
+            </View>
+        );
+    }
 
     return (
         <View style={styles.container}>
@@ -135,6 +200,13 @@ const SettingsScreen = () => {
                     />
                 )}
 
+                {settingsLoading && (
+                    <WarningBanner
+                        icon={"hourglass"}
+                        message={"Updating settings..."}
+                    />
+                )}
+
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Display</Text>
                     <ListItem
@@ -142,12 +214,14 @@ const SettingsScreen = () => {
                         title="Font Size"
                         subtitle={formatFontSize(preferences.fontSize)}
                         onPress={handleFontSizeChange}
+                        disabled={settingsLoading}
                     />
                     <ListItem
                         icon="color-palette"
                         title="Theme"
                         subtitle={formatTheme(preferences.theme)}
                         onPress={handleThemeChange}
+                        disabled={settingsLoading}
                     />
                     <SwitchItem
                         icon="musical-notes"
@@ -155,6 +229,7 @@ const SettingsScreen = () => {
                         subtitle="Display chord notations"
                         value={preferences.display.showChords}
                         onValueChange={(value) => updateNestedPreference('display', 'showChords', value)}
+                        disabled={settingsLoading}
                     />
                     <SwitchItem
                         icon="list"
@@ -162,6 +237,7 @@ const SettingsScreen = () => {
                         subtitle="Display verse numbering"
                         value={preferences.display.showVerseNumbers}
                         onValueChange={(value) => updateNestedPreference('display', 'showVerseNumbers', value)}
+                        disabled={settingsLoading}
                     />
                 </View>
 
@@ -172,7 +248,8 @@ const SettingsScreen = () => {
                         title="Offline Download"
                         subtitle="Download hymns for offline use"
                         value={preferences.offlineDownload}
-                        onValueChange={(value) => updatePreference('offlineDownload', value)}
+                        onValueChange={handleOfflineDownloadChange}
+                        disabled={settingsLoading}
                     />
                     {isLoggedIn && (
                         <>
@@ -182,12 +259,14 @@ const SettingsScreen = () => {
                                 subtitle="Backup your favorites to cloud"
                                 value={preferences.syncFavorites}
                                 onValueChange={(value) => updatePreference('syncFavorites', value)}
+                                disabled={settingsLoading}
                             />
                             <ListItem
                                 icon="cloud-download"
                                 title="Sync from Cloud"
                                 subtitle="Download latest settings from cloud"
-                                onPress={handleForceSyncWithCloud}
+                                onPress={handleSyncWithCloud}
+                                disabled={settingsLoading || syncing}
                             />
                         </>
                     )}
@@ -201,6 +280,7 @@ const SettingsScreen = () => {
                         subtitle="Receive app notifications"
                         value={preferences.notifications.enabled}
                         onValueChange={(value) => updateNestedPreference('notifications', 'enabled', value)}
+                        disabled={settingsLoading}
                     />
                     <SwitchItem
                         icon="alarm"
@@ -208,6 +288,7 @@ const SettingsScreen = () => {
                         subtitle="Daily hymn reminder"
                         value={preferences.notifications.dailyReminder}
                         onValueChange={(value) => updateNestedPreference('notifications', 'dailyReminder', value)}
+                        disabled={settingsLoading}
                     />
                     <SwitchItem
                         icon="add-circle"
@@ -215,6 +296,7 @@ const SettingsScreen = () => {
                         subtitle="Notify about new hymns"
                         value={preferences.notifications.newHymns}
                         onValueChange={(value) => updateNestedPreference('notifications', 'newHymns', value)}
+                        disabled={settingsLoading}
                     />
                 </View>
 
@@ -225,12 +307,12 @@ const SettingsScreen = () => {
                         title="Reset Settings"
                         subtitle="Reset all settings to defaults"
                         onPress={handleResetSettings}
+                        disabled={settingsLoading}
                     />
                 </View>
             </ScrollView>
         </View>
     );
 };
-
 
 export default SettingsScreen;

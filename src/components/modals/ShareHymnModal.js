@@ -1,6 +1,4 @@
-// src/components/modals/ShareHymnModal.js
-
-import React, { useRef } from 'react';
+import React, {useRef} from 'react';
 import {
     Modal,
     View,
@@ -9,8 +7,9 @@ import {
     TouchableOpacity,
     TouchableWithoutFeedback,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import HymnContent from '../../components/hymns/detail/HymnContent'; // Import your component
+import {Ionicons} from '@expo/vector-icons';
+import HymnContent from '../../components/hymns/detail/HymnContent';
+import {useTheme} from "../../context/ThemeContext"; // Import your component
 
 export default function ShareHymnModal({
                                            visible,
@@ -19,6 +18,7 @@ export default function ShareHymnModal({
                                            onShareAsImage,
                                            onShareAsText,
                                        }) {
+    const {colors} = useTheme().theme;
     // Create a ref that points to the view you want to capture
     const viewShotRef = useRef(null);
 
@@ -48,14 +48,14 @@ export default function ShareHymnModal({
         >
             {/* Tapping outside the card dismisses */}
             <TouchableWithoutFeedback onPress={onClose}>
-                <View style={styles.backdrop} />
+                <View style={styles.backdrop}/>
             </TouchableWithoutFeedback>
 
             <View style={styles.centeredContainer}>
                 <View style={styles.card}>
                     {/* Close (X) */}
                     <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-                        <Ionicons name="close" size={24} color="#333" />
+                        <Ionicons name="close" size={24} color={colors.warning}/>
                     </TouchableOpacity>
 
                     {/* ─── THE CAPTURED CONTENT: WRAP IN A VIEW for captureRef ───────── */}
@@ -71,16 +71,16 @@ export default function ShareHymnModal({
                         </View>
 
                         {/* HymnContent (the lyrics) */}
-                        <HymnContent hymn={hymn} />
+                        <HymnContent hymn={hymn}/>
 
                         {/* Branding line at bottom */}
                         <View style={styles.appBranding}>
-                            <Text style={styles.brandingText}>Shared from Hymns App</Text>
+                            <Text style={styles.brandingText}>Shared from Hymns App</Text>
                         </View>
                     </View>
                     {/* ──────────────────────────────────────────────────────────────────── */}
 
-                    <View style={styles.divider} />
+                    <View style={styles.divider}/>
 
                     {/* Share Options */}
                     <TouchableOpacity
@@ -90,7 +90,7 @@ export default function ShareHymnModal({
                         <Ionicons
                             name="image-outline"
                             size={24}
-                            color="#007AFF"
+                            color={colors.warning}
                             style={styles.optionIcon}
                         />
                         <View style={styles.optionTextContainer}>
@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
         paddingBottom: 20,
         paddingHorizontal: 20,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
+        shadowOffset: {width: 0, height: 2},
         shadowOpacity: 0.15,
         shadowRadius: 4,
         elevation: 6,

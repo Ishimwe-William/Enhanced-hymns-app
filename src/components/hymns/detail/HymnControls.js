@@ -7,6 +7,7 @@ import {
 } from 'react-native';
 import {useHymns} from '../../../context/HymnContext';
 import FloatingButton from '../../ui/FloatingButton';
+import {useTheme} from "../../../context/ThemeContext";
 
 const HymnControls = ({hymn, onNext, onPrevious, onShare}) => {
     const {toggleFavorite, isFavorite} = useHymns();
@@ -14,6 +15,79 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare}) => {
     const animatedHeight = useRef(new Animated.Value(0)).current;
     const rotateAnim = useRef(new Animated.Value(0)).current;
     const playButtonTranslateY = useRef(new Animated.Value(0)).current;
+
+    const {colors} = useTheme().theme;
+
+    const styles = StyleSheet.create({
+        container: {
+            backgroundColor: colors.primary,
+            borderTopWidth: 1,
+            borderTopColor: colors.border,
+            position: 'relative',
+        },
+        expandedContainer: {
+            overflow: 'hidden',
+            backgroundColor: colors.card,
+        },
+        controlsGrid: {
+            flexDirection: 'row',
+            flexWrap: 'wrap',
+            justifyContent: 'space-around',
+            alignItems: 'center',
+            paddingHorizontal: 20,
+            paddingVertical: 16,
+            height: 80,
+        },
+        alwaysVisibleContainer: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            position: 'absolute',
+            bottom: 18,
+            right: 12,
+        },
+        playButtonContainer: {
+            marginRight: 16,
+            width: 43,
+            height: 43,
+            borderRadius: 30,
+            backgroundColor: colors.text,
+            alignItems: 'center',
+            justifyContent: 'center',
+            shadowColor: '#000',
+            shadowOffset: {
+                width: 0,
+                height: 2,
+            },
+            shadowOpacity: 0.15,
+            shadowRadius: 3,
+            elevation: 3,
+            borderWidth: 1,
+            borderColor: colors.textSecondary,
+        },
+        toggleButton: {
+            width: 43,
+            height: 43,
+            borderRadius: 30,
+            backgroundColor: colors.primary,
+            alignItems: 'center',
+            justifyContent: 'center',
+            shadowColor: '#000',
+            shadowOffset: {
+                width: 0,
+                height: 2,
+            },
+            shadowOpacity: 0.15,
+            shadowRadius: 3,
+            elevation: 3,
+            borderWidth: 1,
+            borderColor: colors.textSecondary,
+        },
+        chevronContainer: {
+            alignItems: 'center',
+            justifyContent: 'center',
+        },
+    });
+
 
     const isHymnFavorite = isFavorite(hymn?.id);
 
@@ -65,35 +139,35 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare}) => {
         {
             name: 'chevron-back-outline',
             size: 28,
-            color: '#666',
+            color: colors.text,
             onPress: onPrevious,
             label: 'More',
         },
         {
             name: 'text-outline',
             size: 28,
-            color: '#666',
+            color: colors.text,
             onPress: handleFont,
             label: 'Font',
         },
         {
             name: isHymnFavorite ? 'heart' : 'heart-outline',
             size: 28,
-            color: isHymnFavorite ? '#FF3B30' : '#666',
+            color: isHymnFavorite ? colors.danger : colors.text,
             onPress: handleFavorite,
             label: 'Favorite',
         },
         {
             name: 'share-social-outline',
             size: 28,
-            color: '#666',
+            color: colors.text,
             onPress: onShare,
             label: 'Share',
         },
         {
             name: 'chevron-forward-outline',
             size: 28,
-            color: '#666',
+            color: colors.text,
             onPress: onNext,
             label: 'More',
         },
@@ -129,7 +203,7 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare}) => {
                     <FloatingButton
                         name="play"
                         size={28}
-                        color="#007AFF"
+                        color={colors.notification}
                         onPress={handlePlay}
                     />
                 </Animated.View>
@@ -143,6 +217,7 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare}) => {
                     <FloatingButton
                         name={isExpanded ? "chevron-up" : "chevron-down"}
                         size={28}
+                        color={colors.text}
                         onPress={toggleExpand}
                     />
                 </Animated.View>
@@ -151,74 +226,5 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare}) => {
     );
 };
 
-const styles = StyleSheet.create({
-    container: {
-        backgroundColor: 'white',
-        borderTopWidth: 1,
-        borderTopColor: '#e0e0e0',
-        position: 'relative',
-    },
-    expandedContainer: {
-        overflow: 'hidden',
-        backgroundColor: '#f8f9fa',
-    },
-    controlsGrid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        justifyContent: 'space-around',
-        alignItems: 'center',
-        paddingHorizontal: 20,
-        paddingVertical: 16,
-        height: 80,
-    },
-    alwaysVisibleContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        position: 'absolute',
-        bottom: 18,
-        right: 12,
-    },
-    playButtonContainer: {
-        marginRight: 16,
-        width: 43,
-        height: 43,
-        borderRadius: 30,
-        backgroundColor: 'white',
-        alignItems: 'center',
-        justifyContent: 'center',
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.15,
-        shadowRadius: 3,
-        elevation: 3,
-        borderWidth: 1,
-        borderColor: '#e0e0e0',
-    },
-    toggleButton: {
-        width: 43,
-        height: 43,
-        borderRadius: 30,
-        backgroundColor: 'white',
-        alignItems: 'center',
-        justifyContent: 'center',
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.15,
-        shadowRadius: 3,
-        elevation: 3,
-        borderWidth: 1,
-        borderColor: '#e0e0e0',
-    },
-    chevronContainer: {
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-});
 
 export default HymnControls;

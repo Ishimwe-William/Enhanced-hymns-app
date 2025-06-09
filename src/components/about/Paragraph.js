@@ -11,7 +11,7 @@ export const Paragraph = ({title, children}) => {
             lineHeight: 24,
         },
         titleStyle: {
-            color: "#FF9800",
+            color: colors.header,
             fontSize: 20,
             fontWeight: 'bold',
             marginBottom: 8,

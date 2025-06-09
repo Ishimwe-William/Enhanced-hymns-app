@@ -20,7 +20,7 @@ const RecentScreen = () => {
     const styles = StyleSheet.create({
         container: {
             flex: 1,
-            backgroundColor: '#f5f5f5',
+            backgroundColor: colors.card,
         },
         modalContainer: {
             alignItems: 'stretch',
@@ -30,7 +30,7 @@ const RecentScreen = () => {
             fontSize: 18,
             fontWeight: '600',
             marginBottom: 16,
-            color: colors.text,
+            color: colors.header,
             textAlign: 'center',
         },
         modalOption: {
@@ -49,12 +49,12 @@ const RecentScreen = () => {
         cancelOption: {
             marginTop: 8,
             borderTopWidth: 1,
-            borderTopColor: colors.border,
+            borderTopColor: colors.textSecondary,
             paddingTop: 12,
         },
         modalDivider: {
             height: 1,
-            backgroundColor: colors.border,
+            backgroundColor: colors.textSecondary,
             marginVertical: 8,
         },
         userInfo: {
@@ -78,7 +78,7 @@ const RecentScreen = () => {
         warningText: {
             fontSize: 12,
             marginLeft: 8,
-            color: colors.textSecondary,
+            color: colors.warning,
             flex: 1,
             lineHeight: 16,
         },
@@ -175,12 +175,12 @@ const RecentScreen = () => {
                         <Ionicons
                             name="trash-outline"
                             size={20}
-                            color={recentHymns.length === 0 ? colors.disabled : colors.error}
+                            color={recentHymns.length === 0 ? colors.textSecondary : colors.danger}
                         />
                         <Text style={[
                             styles.modalOptionText,
                             {
-                                color: recentHymns.length === 0 ? colors.disabled : colors.error
+                                color: recentHymns.length === 0 ? colors.textSecondary : colors.danger
                             }
                         ]}>
                             Clear Recent Hymns
@@ -194,8 +194,8 @@ const RecentScreen = () => {
                             navigation.navigate('Settings');
                         }}
                     >
-                        <Ionicons name="settings-outline" size={20} color={colors.primary}/>
-                        <Text style={[styles.modalOptionText, {color: colors.primary}]}>
+                        <Ionicons name="settings-outline" size={20} color={colors.text}/>
+                        <Text style={[styles.modalOptionText, {color: colors.text}]}>
                             Sync Settings
                         </Text>
                     </TouchableOpacity>
@@ -203,7 +203,7 @@ const RecentScreen = () => {
                     <View style={styles.modalDivider}/>
 
                     <View style={styles.userInfo}>
-                        <Ionicons name="person-circle-outline" size={20} color={theme.textSecondary}/>
+                        <Ionicons name="person-circle-outline" size={20} color={colors.textSecondary}/>
                         <Text style={styles.userInfoText}>
                             Signed in as {user?.displayName || user?.email}
                         </Text>
@@ -219,8 +219,8 @@ const RecentScreen = () => {
                             handleSignInPrompt();
                         }}
                     >
-                        <Ionicons name="log-in-outline" size={20} color={colors.primary}/>
-                        <Text style={[styles.modalOptionText, {color: colors.primary}]}>
+                        <Ionicons name="log-in-outline" size={20} color={colors.text}/>
+                        <Text style={[styles.modalOptionText, {color: colors.text}]}>
                             Sign In to Save Data
                         </Text>
                     </TouchableOpacity>
@@ -236,12 +236,12 @@ const RecentScreen = () => {
                         <Ionicons
                             name="trash-outline"
                             size={20}
-                            color={recentHymns.length === 0 ? colors.disabled : colors.error}
+                            color={recentHymns.length === 0 ? colors.textSecondary : colors.danger}
                         />
                         <Text style={[
                             styles.modalOptionText,
                             {
-                                color: recentHymns.length === 0 ? colors.disabled : colors.error
+                                color: recentHymns.length === 0 ? colors.textSecondary : colors.danger
                             }
                         ]}>
                             Clear Recent Hymns

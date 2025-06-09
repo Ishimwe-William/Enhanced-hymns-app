@@ -1,11 +1,16 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useUser } from './UserContext';
-import * as SecureStore from 'expo-secure-store';
 import {
     savePreferencesToCloud,
     loadPreferencesFromCloud,
-    syncPreferences
 } from '../services/preferencesService';
+import {
+    initPreferencesDB,
+    savePreferencesToDB,
+    loadPreferencesFromDB,
+    deletePreferencesFromDB,
+    syncPreferences as syncPreferencesWithCloud
+} from '../services/preferencesServiceSQLite';
 
 const PreferencesContext = createContext();
 
@@ -40,43 +45,57 @@ export const PreferencesProvider = ({ children }) => {
     const [preferences, setPreferences] = useState(DEFAULT_PREFERENCES);
     const [loading, setLoading] = useState(true);
     const [syncing, setSyncing] = useState(false);
+    const [dbInitialized, setDbInitialized] = useState(false);
 
-    // Generate storage key based on user ID
-    const getStorageKey = (userId) => `userPreferences_${userId}`;
-
-    // Load preferences when user changes
+    // Initialize database on app start
     useEffect(() => {
+        const initDB = async () => {
+            try {
+                await initPreferencesDB();
+                setDbInitialized(true);
+            } catch (error) {
+                console.error('Failed to initialize preferences database:', error);
+            }
+        };
+        initDB();
+    }, []);
+
+    // Load preferences when user changes and DB is initialized
+    useEffect(() => {
+        if (!dbInitialized) return;
+
         let isCancelled = false;
 
         const loadPreferences = async () => {
             setLoading(true);
             try {
                 if (user?.uid) {
-                    const storageKey = getStorageKey(user.uid);
-                    const storedPrefs = await SecureStore.getItemAsync(storageKey);
+                    // Load from SQLite
+                    const localPreferences = await loadPreferencesFromDB(user.uid);
+                    const mergedPrefs = { ...DEFAULT_PREFERENCES, ...(localPreferences || {}) };
+
                     if (isCancelled) return;
+                    setPreferences(mergedPrefs);
 
-                    // Merge with defaults
-                    let localPreferences = { ...DEFAULT_PREFERENCES, ...(storedPrefs ? JSON.parse(storedPrefs) : {}) };
-                    setPreferences(localPreferences);
-
-                    if (localPreferences.syncFavorites) {
+                    // Sync with cloud if enabled
+                    if (mergedPrefs.syncFavorites) {
                         try {
                             setSyncing(true);
-                            const syncedPreferences = await syncPreferences(user.uid, localPreferences);
+                            const syncedPreferences = await syncPreferencesWithCloud(user.uid, mergedPrefs);
                             if (isCancelled) return;
 
-                            if (JSON.stringify(syncedPreferences) !== JSON.stringify(localPreferences)) {
+                            if (JSON.stringify(syncedPreferences) !== JSON.stringify(mergedPrefs)) {
                                 setPreferences(syncedPreferences);
-                                await SecureStore.setItemAsync(storageKey, JSON.stringify(syncedPreferences));
+                                await savePreferencesToDB(user.uid, syncedPreferences);
                             }
                         } catch (err) {
-                            console.log('Sync failed, using local preferences');
+                            console.log('Sync failed, using local preferences:', err.message);
                         } finally {
                             setSyncing(false);
                         }
                     }
                 } else {
+                    // User not logged in, use defaults
                     setPreferences(DEFAULT_PREFERENCES);
                 }
             } catch (err) {
@@ -92,22 +111,21 @@ export const PreferencesProvider = ({ children }) => {
         return () => {
             isCancelled = true;
         };
-    }, [user?.uid]);
+    }, [user?.uid, dbInitialized]);
 
-
-    // Save preferences to secure store and optionally to cloud
+    // Save preferences to SQLite and optionally to cloud
     const savePreferences = async (newPreferences) => {
         try {
             if (user?.uid) {
-                const storageKey = getStorageKey(user.uid);
-                await SecureStore.setItemAsync(storageKey, JSON.stringify(newPreferences));
+                // Save to SQLite
+                await savePreferencesToDB(user.uid, newPreferences);
 
                 // Save to cloud if sync is enabled
                 if (newPreferences.syncFavorites) {
                     try {
                         await savePreferencesToCloud(user.uid, newPreferences);
                     } catch (cloudError) {
-                        console.log('Cloud sync failed, preferences saved locally');
+                        console.log('Cloud sync failed, preferences saved locally:', cloudError.message);
                     }
                 }
             }
@@ -177,8 +195,10 @@ export const PreferencesProvider = ({ children }) => {
     };
 
     // Force sync with cloud
-    const forceSyncWithCloud = async () => {
-        if (!user?.uid) return false;
+    const handleForceSyncWithCloud = async () => {
+        if (!user?.uid) {
+            throw new Error('User not logged in');
+        }
 
         try {
             setSyncing(true);
@@ -187,9 +207,7 @@ export const PreferencesProvider = ({ children }) => {
             if (cloudPreferences) {
                 const mergedPrefs = { ...DEFAULT_PREFERENCES, ...cloudPreferences };
                 setPreferences(mergedPrefs);
-
-                const storageKey = getStorageKey(user.uid);
-                await SecureStore.setItemAsync(storageKey, JSON.stringify(mergedPrefs));
+                await savePreferencesToDB(user.uid, mergedPrefs);
                 return true;
             }
             return false;
@@ -198,6 +216,19 @@ export const PreferencesProvider = ({ children }) => {
             throw error;
         } finally {
             setSyncing(false);
+        }
+    };
+
+    // Clear user preferences (on logout)
+    const clearUserPreferences = async () => {
+        try {
+            if (user?.uid) {
+                await deletePreferencesFromDB(user.uid);
+            }
+            setPreferences(DEFAULT_PREFERENCES);
+        } catch (error) {
+            console.error('Error clearing user preferences:', error);
+            throw error;
         }
     };
 
@@ -210,8 +241,10 @@ export const PreferencesProvider = ({ children }) => {
         resetPreferences,
         exportPreferences,
         importPreferences,
-        forceSyncWithCloud,
+        handleForceSyncWithCloud,
+        clearUserPreferences,
         isLoggedIn: !!user?.uid,
+        dbInitialized
     };
 
     return (

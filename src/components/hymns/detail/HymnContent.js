@@ -2,8 +2,11 @@ import React from 'react';
 import {ScrollView, View, Text, StyleSheet} from 'react-native';
 import StanzaView from './StanzaView';
 import RefrainView from './RefrainView';
+import {useTheme} from "../../../context/ThemeContext";
 
 const HymnContent = ({hymn}) => {
+    const {colors} = useTheme().theme;
+
     if (!hymn) return null;
 
     // Function to render content in the correct order
@@ -48,6 +51,55 @@ const HymnContent = ({hymn}) => {
         return content;
     };
 
+
+    const styles = StyleSheet.create({
+        container: {
+            flex: 1,
+            backgroundColor: colors.card,
+        },
+        scrollContent: {
+            flexGrow: 1,
+        },
+        content: {
+            padding: 20,
+            paddingBottom: 40,
+        },
+        titleContainer: {
+            flexDirection: "row",
+            justifyContent: "space-between",
+            marginBottom: 16,
+            alignItems: 'center',
+            borderBottomWidth: 1,
+            borderBottomColor: colors.border,
+            paddingBottom: 8,
+        },
+        title: {
+            fontSize: 24,
+            fontWeight: 'bold',
+            textAlign: 'center',
+            marginBottom: 8,
+            color: colors.textSecondary,
+        },
+        hymnNumber: {
+            fontSize: 16,
+            color: colors.textSecondary,
+            marginBottom: 4,
+        },
+        origin: {
+            fontSize: 14,
+            width: "80%",
+            fontStyle: 'italic',
+            color: '#888',
+        },
+        stanzaContainer: {
+            marginBottom: 20,
+        },
+        refrainContainer: {
+            marginBottom: 20,
+        },
+    });
+
+
     return (
         <ScrollView
             style={styles.container}
@@ -75,52 +127,5 @@ const HymnContent = ({hymn}) => {
         </ScrollView>
     );
 };
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#fff',
-    },
-    scrollContent: {
-        flexGrow: 1,
-    },
-    content: {
-        padding: 20,
-        paddingBottom: 40, // Extra padding at bottom
-    },
-    titleContainer: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        marginBottom: 16,
-        alignItems: 'center',
-        borderBottomWidth: 1,
-        borderBottomColor: '#e0e0e0',
-        paddingBottom: 8,
-    },
-    title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        textAlign: 'center',
-        marginBottom: 8,
-        color: '#333',
-    },
-    hymnNumber: {
-        fontSize: 16,
-        color: '#666',
-        marginBottom: 4,
-    },
-    origin: {
-        fontSize: 14,
-        width: "80%",
-        fontStyle: 'italic',
-        color: '#888',
-    },
-    stanzaContainer: {
-        marginBottom: 20,
-    },
-    refrainContainer: {
-        marginBottom: 20,
-    },
-});
 
 export default HymnContent;

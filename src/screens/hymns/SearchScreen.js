@@ -33,7 +33,7 @@ const SearchScreen = () => {
 
     return (
         <View style={styles.container}>
-            <Header title="Search" showMenu onMenu={handleMenuPress} />
+            <Header title="Search" showMenu onMenu={handleMenuPress}showMore={false} />
             <SearchBar
                 value={searchQuery}
                 onChangeText={setSearchQuery}

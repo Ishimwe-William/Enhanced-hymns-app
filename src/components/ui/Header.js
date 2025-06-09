@@ -71,7 +71,7 @@ const Header = ({
             alignItems: 'center',
         },
         modalContent: {
-            backgroundColor: colors.card ?? colors.background,
+            backgroundColor: colors.primary,
             borderRadius: 12,
             padding: 20,
             minWidth: screenWidth * 0.8,

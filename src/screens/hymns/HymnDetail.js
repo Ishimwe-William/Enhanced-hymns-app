@@ -21,6 +21,7 @@ import { Ionicons } from '@expo/vector-icons';
 // Import our new share utilities
 import { shareHymnAsImage, shareHymnAsText } from '../../utils/shareHymn';
 import {MyConstants} from "../../utils/constants";
+import {useTheme} from "../../context/ThemeContext";
 
 const HymnDetail = () => {
     const navigation = useNavigation();
@@ -34,11 +35,139 @@ const HymnDetail = () => {
     const [loading, setLoading] = useState(true);
     const [isCapturing, setIsCapturing] = useState(false);
 
+    const {colors} = useTheme().theme;
+
     // We’ll capture exactly the “shareableContent” <View> when isCapturing===true
     const viewShotRef = useRef(null);
 
     // Check if current user is admin
     const isAdmin = user?.role === 'admin' || user?.isAdmin === true;
+
+    const styles = StyleSheet.create({
+        container: {
+            flex: 1,
+            backgroundColor: colors.card,
+        },
+        modalContainer: {
+            minWidth: 280,
+        },
+        captureOverlay: {
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'transparent',
+            alignItems: 'center',
+            justifyContent: 'center',
+        },
+        shareableContent: {
+            width: '90%',
+            backgroundColor: '#FFFFFF',
+            padding: 20,
+            borderRadius: 8,
+            // If you want a drop‐shadow for the captured image:
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 4,
+            elevation: 5,
+        },
+        hymnHeader: {
+            alignItems: 'center',
+            marginBottom: 16,
+            borderBottomWidth: 1,
+            borderBottomColor: '#E0E0E0',
+            paddingBottom: 12,
+        },
+        hymnTitle: {
+            fontSize: 24,
+            fontWeight: 'bold',
+            color: '#333',
+            textAlign: 'center',
+            marginBottom: 4,
+        },
+        hymnNumber: {
+            fontSize: 16,
+            color: '#666',
+            fontWeight: '500',
+        },
+        appBranding: {
+            alignItems: 'center',
+            marginTop: 20,
+            paddingTop: 12,
+            borderTopWidth: 1,
+            borderTopColor: '#E0E0E0',
+        },
+        brandingText: {
+            fontSize: 12,
+            color: '#999',
+            fontStyle: 'italic',
+        },
+        modalOption: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingVertical: 16,
+            paddingHorizontal: 4,
+            borderBottomWidth: 0.5,
+            borderBottomColor: colors.textSecondary,
+        },
+        modalOptionIcon: {
+            width: 40,
+            height: 40,
+            borderRadius: 20,
+            backgroundColor: colors.card,
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginRight: 16,
+        },
+        modalOptionContent: {
+            flex: 1,
+        },
+        modalTitle: {
+            fontSize: 18,
+            fontWeight: '600',
+            marginBottom: 16,
+            color: colors.header,
+            textAlign: 'center',
+        },
+        modalOptionTitle: {
+            fontSize: 16,
+            fontWeight: '600',
+            color: colors.text,
+            marginBottom: 2,
+        },
+        modalOptionSubtitle: {
+            fontSize: 14,
+            color: colors.textSecondary,
+        },
+        adminOption: {
+            backgroundColor: '#FFF9F0',
+            borderRadius: 8,
+            marginTop: 8,
+            paddingHorizontal: 12,
+            borderBottomWidth: 0,
+        },
+        adminOptionIcon: {
+            backgroundColor: '#FFF4E6',
+        },
+        adminOptionTitle: {
+            color: '#FF9500',
+        },
+        cancelButton: {
+            marginTop: 20,
+            paddingVertical: 14,
+            backgroundColor: '#F5F5F5',
+            borderRadius: 8,
+            alignItems: 'center',
+        },
+        cancelButtonText: {
+            fontSize: 16,
+            fontWeight: '600',
+            color: '#666',
+        },
+    });
+
 
     useEffect(() => {
         const loadHymn = async () => {
@@ -81,8 +210,6 @@ const HymnDetail = () => {
         );
     };
 
-    // ⬇️ When “Share as Image” is tapped, set isCapturing=true so the “shareable” view is rendered,
-    // then wait a tick for it to mount, then call shareHymnAsImage([...]), then finally set isCapturing=false.
     const beginImageShare = async () => {
         setIsCapturing(true);
 
@@ -188,7 +315,7 @@ const HymnDetail = () => {
                 }}
             >
                 <View style={styles.modalOptionIcon}>
-                    <Ionicons name="share-outline" size={24} color="#007AFF" />
+                    <Ionicons name="share-outline" size={24} color={colors.header} />
                 </View>
                 <View style={styles.modalOptionContent}>
                     <Text style={styles.modalOptionTitle}>Share Hymn</Text>
@@ -196,7 +323,7 @@ const HymnDetail = () => {
                         Share this hymn with others
                     </Text>
                 </View>
-                <Ionicons name="chevron-forward" size={20} color="#C7C7CC" />
+                <Ionicons name="chevron-forward" size={20} color={colors.header} />
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -207,7 +334,7 @@ const HymnDetail = () => {
                 }}
             >
                 <View style={styles.modalOptionIcon}>
-                    <Ionicons name="chatbubble-outline" size={24} color="#007AFF" />
+                    <Ionicons name="chatbubble-outline" size={24} color={colors.header} />
                 </View>
                 <View style={styles.modalOptionContent}>
                     <Text style={styles.modalOptionTitle}>Send Feedback</Text>
@@ -215,7 +342,7 @@ const HymnDetail = () => {
                         Report issues or suggestions
                     </Text>
                 </View>
-                <Ionicons name="chevron-forward" size={20} color="#C7C7CC" />
+                <Ionicons name="chevron-forward" size={20} color={colors.header} />
             </TouchableOpacity>
 
             {isAdmin && (
@@ -227,7 +354,7 @@ const HymnDetail = () => {
                     }}
                 >
                     <View style={[styles.modalOptionIcon, styles.adminOptionIcon]}>
-                        <Ionicons name="create-outline" size={24} color="#FF9500" />
+                        <Ionicons name="create-outline" size={24} color={colors.waring} />
                     </View>
                     <View style={styles.modalOptionContent}>
                         <Text style={[styles.modalOptionTitle, styles.adminOptionTitle]}>
@@ -306,131 +433,9 @@ const HymnDetail = () => {
                     </View>
                 </View>
             )}
-            {/* ──────────────────────────────────────────────────────────────────────────── */}
         </View>
     );
 };
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#fff',
-    },
-    modalContainer: {
-        minWidth: 280,
-    },
-    // ─── Styles for the hidden shareable view ─────────────────────────────────
-    captureOverlay: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100%',
-        // Make it full‐screen so captureRef can grab correct dimensions
-        height: '100%',
-        backgroundColor: 'transparent',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    shareableContent: {
-        width: '90%',
-        backgroundColor: '#FFFFFF',
-        padding: 20,
-        borderRadius: 8,
-        // If you want a drop‐shadow for the captured image:
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 5,
-    },
-    hymnHeader: {
-        alignItems: 'center',
-        marginBottom: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: '#E0E0E0',
-        paddingBottom: 12,
-    },
-    hymnTitle: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#333',
-        textAlign: 'center',
-        marginBottom: 4,
-    },
-    hymnNumber: {
-        fontSize: 16,
-        color: '#666',
-        fontWeight: '500',
-    },
-    appBranding: {
-        alignItems: 'center',
-        marginTop: 20,
-        paddingTop: 12,
-        borderTopWidth: 1,
-        borderTopColor: '#E0E0E0',
-    },
-    brandingText: {
-        fontSize: 12,
-        color: '#999',
-        fontStyle: 'italic',
-    },
-    // ────────────────────────────────────────────────────────────────────────────
-
-    modalOption: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: 16,
-        paddingHorizontal: 4,
-        borderBottomWidth: 0.5,
-        borderBottomColor: '#E0E0E0',
-    },
-    modalOptionIcon: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: '#F0F8FF',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginRight: 16,
-    },
-    modalOptionContent: {
-        flex: 1,
-    },
-    modalOptionTitle: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#333',
-        marginBottom: 2,
-    },
-    modalOptionSubtitle: {
-        fontSize: 14,
-        color: '#666',
-    },
-    adminOption: {
-        backgroundColor: '#FFF9F0',
-        borderRadius: 8,
-        marginTop: 8,
-        paddingHorizontal: 12,
-        borderBottomWidth: 0,
-    },
-    adminOptionIcon: {
-        backgroundColor: '#FFF4E6',
-    },
-    adminOptionTitle: {
-        color: '#FF9500',
-    },
-    cancelButton: {
-        marginTop: 20,
-        paddingVertical: 14,
-        backgroundColor: '#F5F5F5',
-        borderRadius: 8,
-        alignItems: 'center',
-    },
-    cancelButtonText: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#666',
-    },
-});
 
 export default HymnDetail;

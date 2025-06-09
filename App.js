@@ -1,21 +1,21 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { View } from "react-native";
+import React, {useCallback, useEffect, useState} from "react";
+import {View} from "react-native";
 import * as SplashScreen from "expo-splash-screen";
-import { useFonts } from "expo-font";
+import {useFonts} from "expo-font";
 
-import { init } from "./src/services/localHymnService";
+import {init} from "./src/services/localHymnService";
 
-import { FontProvider } from "./src/context/FontContext";
-import { ThemeProvider } from './src/context/ThemeContext';
-import { UserProvider, useUser } from "./src/context/UserContext";
-import { PreferencesProvider } from "./src/context/PreferencesContext";
-import { HymnProvider } from './src/context/HymnContext';
+import {FontProvider} from "./src/context/FontContext";
+import {ThemeProvider} from './src/context/ThemeContext';
+import {UserProvider, useUser} from "./src/context/UserContext";
+import {PreferencesProvider} from "./src/context/PreferencesContext";
+import {HymnProvider} from './src/context/HymnContext';
 import ThemedApp from './src/ThemedApp';
 
-SplashScreen.preventAutoHideAsync();
+SplashScreen.preventAutoHideAsync().catch((err) => console.error("Error preventing splash screen auto-hide:", err));
 
-function AppContent({ onAppReady }) {
-    const { loading: userLoading, authInitialized } = useUser();
+function AppContent({onAppReady}) {
+    const {loading: userLoading, authInitialized} = useUser();
     const [dbInitialized, setDbInitialized] = useState(false);
 
     useEffect(() => {
@@ -38,11 +38,11 @@ function AppContent({ onAppReady }) {
     }, [dbInitialized, authInitialized]);
 
     return (
-        <View style={{ flex: 1 }}>
+        <View style={{flex: 1}}>
             <ThemeProvider>
                 <PreferencesProvider>
                     <HymnProvider>
-                        <ThemedApp />
+                        <ThemedApp/>
                     </HymnProvider>
                 </PreferencesProvider>
             </ThemeProvider>
@@ -75,7 +75,7 @@ export default function App() {
     return (
         <UserProvider>
             <FontProvider>
-                <AppContent onAppReady={onAppReady} />
+                <AppContent onAppReady={onAppReady}/>
             </FontProvider>
         </UserProvider>
     );

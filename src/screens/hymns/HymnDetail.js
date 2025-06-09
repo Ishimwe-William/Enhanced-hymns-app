@@ -126,7 +126,7 @@ const HymnDetail = () => {
 
     const handleEmailFeedback = () => {
         // If you have an environment variable for feedback email:
-        const email = process.env.EXPO_PUBLIC_FEEDBACK_EMAIL || 'feedback@hymnsapp.com';
+        const email = Constants.expoConfig.extra.EXPO_PUBLIC_FEEDBACK_EMAIL || 'feedback@hymnsapp.com';
         const subject = `Feedback for Hymn ${hymn.number} - ${hymn.title}`;
         const body = `I would like to provide feedback about Hymn ${hymn.number} - "${hymn.title}":\n\n`;
 

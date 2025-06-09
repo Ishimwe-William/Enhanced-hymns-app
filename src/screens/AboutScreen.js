@@ -106,7 +106,7 @@ const AboutScreen = () => {
 
                     />
                     <ConnectIcon name={"Email"} icon={"email"}
-                                 onPress={() => Linking.openURL(`mailto:${process.env.EXPO_PUBLIC_FEEDBACK_EMAIL}`)}
+                                 onPress={() => Linking.openURL(`mailto:${Constants.expoConfig.extra.EXPO_PUBLIC_FEEDBACK_EMAIL}`)}
                     />
                 </View>
                 <View style={styles.section}>

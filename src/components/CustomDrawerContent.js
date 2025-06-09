@@ -6,6 +6,7 @@ import * as StoreReview from 'expo-store-review';
 import * as Linking from 'expo-linking';
 import {AppLogoHeader} from "./ui/AppLogoHeader";
 import {useTheme} from "../context/ThemeContext";
+import Constants from "expo-constants";
 
 
 const CustomDrawerContent = (props) => {
@@ -62,8 +63,8 @@ const CustomDrawerContent = (props) => {
                 await Linking.openURL(storeUrl);
             } else {
                 // Fallback URLs - replace with your actual app IDs
-                const itunesItemId = process.env.EXPO_PUBLIC_APP_STORE_ID; // Replace with your iOS App Store ID
-                const androidPackageName = process.env.EXPO_PUBLIC_PACKAGE_NAME; // Replace with your package name
+                const itunesItemId = Constants.expoConfig.extra.EXPO_PUBLIC_APP_STORE_ID; // Replace with your iOS App Store ID
+                const androidPackageName = Constants.expoConfig.extra.EXPO_PUBLIC_PACKAGE_NAME; // Replace with your package name
 
                 if (Platform.OS === 'ios') {
                     await Linking.openURL(`https://apps.apple.com/app/apple-store/id${itunesItemId}?action=write-review`);
@@ -94,7 +95,7 @@ const CustomDrawerContent = (props) => {
                     text: 'Contact Us',
                     onPress: () => {
                         // Open email or contact form
-                        Linking.openURL(`mailto:${process.env.EXPO_PUBLIC_FEEDBACK_EMAIL}`);
+                        Linking.openURL(`mailto:${Constants.expoConfig.extra.EXPO_PUBLIC_FEEDBACK_EMAIL}`);
                     },
                 },
                 {

@@ -4,6 +4,7 @@ import * as Google from 'expo-auth-session/providers/google';
 import * as SecureStore from 'expo-secure-store';
 import {GoogleAuthProvider, onAuthStateChanged, signInWithCredential, signOut} from 'firebase/auth';
 import {auth} from '../config/firebaseConfig';
+import Constants from "expo-constants";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -19,9 +20,9 @@ export const UserProvider = ({ children }) => {
     const [authInitialized, setAuthInitialized] = useState(false);
 
     const [request, response, promptAsync] = Google.useAuthRequest({
-        androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
-        iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
-        webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+        androidClientId: Constants.expoConfig.extra.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
+        iosClientId: Constants.expoConfig.extra.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+        webClientId: Constants.expoConfig.extra.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
     });
 
     // Enhanced function to check if user session is still valid

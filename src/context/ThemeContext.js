@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useMemo } from 'react';
 import { Appearance } from 'react-native';
-import { themes } from "../utils/colors";
+import { themes } from "../utils/theme/colors";
 
 const defaultScheme = Appearance.getColorScheme();
 

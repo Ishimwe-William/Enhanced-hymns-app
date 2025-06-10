@@ -1,5 +1,3 @@
-// src/screens/hymns/HymnDetail.js
-
 import React, { useState, useEffect, useRef } from 'react';
 import {
     View,
@@ -19,14 +17,16 @@ import { useUser } from '../../context/UserContext';
 import { Ionicons } from '@expo/vector-icons';
 
 // Import our new share utilities
-import { shareHymnAsImage, shareHymnAsText } from '../../utils/shareHymn';
+import { shareHymnAsImage, shareHymnAsText } from '../../utils/hymns/shareHymn';
 import {MyConstants} from "../../utils/constants";
 import {useTheme} from "../../context/ThemeContext";
+import Constants from "expo-constants";
 
 const HymnDetail = () => {
     const navigation = useNavigation();
     const route = useRoute();
     const { hymnId } = route.params;
+    const email = Constants.expoConfig.extra.EXPO_PUBLIC_FEEDBACK_EMAIL || 'feedback@hymnsapp.com';
 
     const { hymns, loadHymnDetails } = useHymns();
     const { user } = useUser();
@@ -253,7 +253,6 @@ const HymnDetail = () => {
 
     const handleEmailFeedback = () => {
         // If you have an environment variable for feedback email:
-        const email = Constants.expoConfig.extra.EXPO_PUBLIC_FEEDBACK_EMAIL || 'feedback@hymnsapp.com';
         const subject = `Feedback for Hymn ${hymn.number} - ${hymn.title}`;
         const body = `I would like to provide feedback about Hymn ${hymn.number} - "${hymn.title}":\n\n`;
 
@@ -268,11 +267,10 @@ const HymnDetail = () => {
     };
 
     const handleInAppFeedback = () => {
-        navigation.navigate('FeedbackForm', {
-            hymnId,
-            hymnTitle: hymn.title,
-            hymnNumber: hymn.number,
-        });
+        Alert.alert(
+            'Form Not Available',
+            `Please send your feedback to: ${email}`
+        );
     };
 
     const handleNext = () => {

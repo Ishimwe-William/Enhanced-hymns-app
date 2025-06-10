@@ -1,9 +1,9 @@
 import React from 'react';
 import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
-import {Ionicons} from "@expo/vector-icons";
+import {MaterialCommunityIcons} from "@expo/vector-icons";
 import {useTheme} from "../../context/ThemeContext";
 
-const WarningBanner = ({message, icon = "warning", signIn, type = "warning"}) => {
+const WarningBanner = ({message, icon = "alert", signIn, type = "warning"}) => {
     const {colors} = useTheme().theme;
 
     const styles = StyleSheet.create({
@@ -28,7 +28,7 @@ const WarningBanner = ({message, icon = "warning", signIn, type = "warning"}) =>
 
     return (
         <View style={styles.warningBanner}>
-            <Ionicons name={icon} size={20} color={type === "warning" ? colors.warning : colors.notification}/>
+            <MaterialCommunityIcons name={icon} size={20} color={type === "warning" ? colors.warning : colors.notification}/>
             <Text style={styles.warningText}>
                 {message}
             </Text>

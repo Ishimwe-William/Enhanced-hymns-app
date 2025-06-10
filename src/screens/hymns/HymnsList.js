@@ -22,7 +22,12 @@ const HymnsList = () => {
     };
 
     const handleHymnSelect = (hymnId) => {
-        navigation.navigate('HymnDetail', { hymnId });
+        try {
+            navigation.navigate('HymnDetail', {hymnId});
+        } catch (error) {
+            console.error('Error navigating to hymn detail:', error);
+            // Optionally show an alert or toast to inform the user
+        }
     };
 
     if (loading) {

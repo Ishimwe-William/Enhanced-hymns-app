@@ -1,6 +1,7 @@
-import {StyleSheet, Text, TouchableOpacity, View} from "react-native";
+import {StyleSheet, Text, View} from "react-native";
 import {Ionicons} from "@expo/vector-icons";
 import {useTheme} from "../../context/ThemeContext";
+import {IconTextButton} from "../ui/IconTextButton";
 
 export const SignInCard = ({onSignIn}) => {
     const {colors} = useTheme().theme;
@@ -19,30 +20,6 @@ export const SignInCard = ({onSignIn}) => {
             textAlign: 'center',
             lineHeight: 22,
             marginBottom: 32,
-        },
-        signInButton: {
-            flexDirection: 'row',
-            alignItems: 'center',
-            backgroundColor: colors.header,
-            paddingHorizontal: 24,
-            paddingVertical: 12,
-            borderRadius: 8,
-            shadowColor: '#000',
-            shadowOffset: {
-                width: 0,
-                height: 2,
-            },
-            shadowOpacity: 0.1,
-            shadowRadius: 4,
-            elevation: 2,
-        },
-        signInButtonIcon: {
-            marginRight: 8,
-        },
-        signInButtonText: {
-            color: colors.background,
-            fontSize: 16,
-            fontWeight: '600',
         },
         signInSection: {
             flex: 1,
@@ -67,10 +44,7 @@ export const SignInCard = ({onSignIn}) => {
                 <Text style={styles.signInMessage}>
                     Sign in to sync your favorites across devices and access personalized features
                 </Text>
-                <TouchableOpacity style={styles.signInButton} onPress={onSignIn}>
-                    <Ionicons name="logo-google" size={20} color={colors.background} style={styles.signInButtonIcon}/>
-                    <Text style={styles.signInButtonText}>Sign in with Google</Text>
-                </TouchableOpacity>
+                <IconTextButton text={"Sign in with Google"} icon={"logo-google"} onPress={onSignIn}/>
             </View>
         </View>
     );

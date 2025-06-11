@@ -1,6 +1,8 @@
 import * as SQLite from 'expo-sqlite';
 
-const database = SQLite.openDatabaseSync('hymns');
+const database = SQLite.openDatabaseSync('hymns', {
+        useNewConnection: true
+    });
 
 export const init = async () => {
     try {
@@ -10,18 +12,51 @@ export const init = async () => {
 
         if (!tableExists) {
             await database.runAsync(`
-                CREATE TABLE IF NOT EXISTS hymns (
-                                                     id INTEGER PRIMARY KEY NOT NULL,
-                                                     firebase_id TEXT NOT NULL UNIQUE,
-                                                     hymn_number INTEGER NOT NULL,
-                                                     origin TEXT NOT NULL,
-                                                     doh TEXT NULL,
-                                                     title TEXT NOT NULL,
-                                                     stanzas TEXT NOT NULL,
-                                                     refrains TEXT NULL,
-                                                     category TEXT NULL,
-                                                     updatedAt TEXT NULL,
-                                                     UNIQUE(hymn_number)
+                CREATE TABLE IF NOT EXISTS hymns
+                (
+                    id
+                    INTEGER
+                    PRIMARY
+                    KEY
+                    NOT
+                    NULL,
+                    firebase_id
+                    TEXT
+                    NOT
+                    NULL
+                    UNIQUE,
+                    hymn_number
+                    INTEGER
+                    NOT
+                    NULL,
+                    origin
+                    TEXT
+                    NOT
+                    NULL,
+                    doh
+                    TEXT
+                    NULL,
+                    title
+                    TEXT
+                    NOT
+                    NULL,
+                    stanzas
+                    TEXT
+                    NOT
+                    NULL,
+                    refrains
+                    TEXT
+                    NULL,
+                    category
+                    TEXT
+                    NULL,
+                    updatedAt
+                    TEXT
+                    NULL,
+                    UNIQUE
+                (
+                    hymn_number
+                )
                     )
             `);
         } else {
@@ -91,8 +126,7 @@ export const getLocalHymnCount = async () => {
 export const getLocalStorageSize = async () => {
     try {
         const result = await database.getFirstAsync(`
-            SELECT 
-                COUNT(*) as count,
+            SELECT COUNT(*) as count,
                 SUM(LENGTH(title) + LENGTH(stanzas) + LENGTH(IFNULL(refrains, '')) + LENGTH(IFNULL(doh, ''))) as totalSize
             FROM hymns
         `);
@@ -102,13 +136,13 @@ export const getLocalStorageSize = async () => {
         };
     } catch (error) {
         console.error("Error calculating storage size:", error);
-        return { count: 0, estimatedSizeKB: 0 };
+        return {count: 0, estimatedSizeKB: 0};
     }
 }
 
 export const insertHymn = async (hymnData) => {
     try {
-        const { id: firebaseId, number, origin, doh, title, stanzas, refrains, category, updatedAt } = hymnData;
+        const {id: firebaseId, number, origin, doh, title, stanzas, refrains, category, updatedAt} = hymnData;
 
         return await database.runAsync(
             'INSERT OR REPLACE INTO hymns (firebase_id, hymn_number, origin, doh, title, stanzas, refrains, category, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
@@ -132,7 +166,7 @@ export const insertHymn = async (hymnData) => {
 
 export const updateHymn = async (id, hymnData) => {
     try {
-        const { number, origin, doh, title, stanzas, refrains, category, updatedAt } = hymnData;
+        const {number, origin, doh, title, stanzas, refrains, category, updatedAt} = hymnData;
 
         return await database.runAsync(
             'UPDATE hymns SET hymn_number = ?, origin = ?, doh = ?, title = ?, stanzas = ?, refrains = ?, category = ?, updatedAt = ? WHERE id = ?',
@@ -157,7 +191,7 @@ export const updateHymn = async (id, hymnData) => {
 // Update hymn by firebase_id instead of local id
 export const updateHymnByFirebaseId = async (firebaseId, hymnData) => {
     try {
-        const { number, origin, doh, title, stanzas, refrains, category, updatedAt } = hymnData;
+        const {number, origin, doh, title, stanzas, refrains, category, updatedAt} = hymnData;
 
         return await database.runAsync(
             'UPDATE hymns SET hymn_number = ?, origin = ?, doh = ?, title = ?, stanzas = ?, refrains = ?, category = ?, updatedAt = ? WHERE firebase_id = ?',

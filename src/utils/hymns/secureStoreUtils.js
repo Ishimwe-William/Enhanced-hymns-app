@@ -1,4 +1,4 @@
-import * as SecureStore from 'expo-secure-store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Generate key for favorites
 export const getFavoritesKey = (userId) => `userFavorites_${userId}`;
@@ -9,7 +9,7 @@ export const getRecentKey = (userId) => `userRecent_${userId}`;
 // Save data to SecureStore
 export const saveToSecureStore = async (key, data) => {
     try {
-        await SecureStore.setItemAsync(key, JSON.stringify(data));
+        await AsyncStorage.setItem(key, JSON.stringify(data));
     } catch (error) {
         console.error(`Error saving to SecureStore with key ${key}:`, error);
         throw error;
@@ -19,7 +19,7 @@ export const saveToSecureStore = async (key, data) => {
 // Load data from SecureStore
 export const loadFromSecureStore = async (key, defaultValue = null) => {
     try {
-        const storedData = await SecureStore.getItemAsync(key);
+        const storedData = await AsyncStorage.getItem(key);
         return storedData ? JSON.parse(storedData) : defaultValue;
     } catch (error) {
         console.error(`Error loading from SecureStore with key ${key}:`, error);
@@ -30,7 +30,7 @@ export const loadFromSecureStore = async (key, defaultValue = null) => {
 // Delete data from SecureStore
 export const deleteFromSecureStore = async (key) => {
     try {
-        await SecureStore.deleteItemAsync(key);
+        await AsyncStorage.removeItem(key);
     } catch (error) {
         console.error(`Error deleting from SecureStore with key ${key}:`, error);
         throw error;

@@ -5,10 +5,10 @@ export default ({config}) => {
         ...config,
         name: "Indirimbo Zo Guhimbaza Imana",
         slug: "hymns-app",
-        version: "1.0.3",
+        description: "An app for accessing and singing hymns in Kinyarwanda.",
+        version: "1.0.5",
         backgroundColor: "#ffffff",
         userInterfaceStyle: "automatic",
-        versionCode: 1,
         icon: "./assets/icon.png",
         splash: {
             image: "./assets/icon.png",
@@ -18,11 +18,14 @@ export default ({config}) => {
         assetBundlePatterns: ["**/*"],
         scheme: "com.bunsenplus.hymnsapp",
         android: {
+            name: "Indirimbo Zo Guhimbaza Imana",
             package: "com.bunsenplus.hymnsapp",
+            icon: "./assets/icon.png",
             adaptiveIcon: {
                 foregroundImage: "./assets/adaptive-icon.png",
                 backgroundColor: "#ffffff"
-            }
+            },
+            versionCode: 3,
         },
         ios: {
             supportsTablet: true,

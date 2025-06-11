@@ -1,7 +1,7 @@
 import React, {createContext, useContext, useEffect, useState} from 'react';
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
-import * as SecureStore from 'expo-secure-store';
+import AsyncStorage  from "@react-native-async-storage/async-storage";
 import {GoogleAuthProvider, onAuthStateChanged, signInWithCredential, signOut} from 'firebase/auth';
 import {auth} from '../config/firebaseConfig';
 import Constants from "expo-constants";
@@ -28,8 +28,8 @@ export const UserProvider = ({ children }) => {
     // Enhanced function to check if user session is still valid
     const checkUserSession = async () => {
         try {
-            const storedUser = await SecureStore.getItemAsync(USER_KEY);
-            const storedToken = await SecureStore.getItemAsync(USER_TOKEN_KEY);
+            const storedUser = await AsyncStorage.getItem(USER_KEY);
+            const storedToken = await AsyncStorage.getItem(USER_TOKEN_KEY);
 
             if (storedUser && storedToken) {
                 const userData = JSON.parse(storedUser);
@@ -55,8 +55,8 @@ export const UserProvider = ({ children }) => {
     // Function to clear stored user data
     const clearStoredUserData = async () => {
         try {
-            await SecureStore.deleteItemAsync(USER_KEY);
-            await SecureStore.deleteItemAsync(USER_TOKEN_KEY);
+            await AsyncStorage.removeItem(USER_KEY);
+            await AsyncStorage.removeItem(USER_TOKEN_KEY);
             setUser(null);
             setIsAuthenticated(false);
         } catch (error) {
@@ -88,7 +88,7 @@ export const UserProvider = ({ children }) => {
 
                             setUser(userData);
                             setIsAuthenticated(true);
-                            await SecureStore.setItemAsync(USER_KEY, JSON.stringify(userData));
+                            await AsyncStorage.setItem(USER_KEY, JSON.stringify(userData));
                         }
                         setAuthInitialized(true);
                         setLoading(false);
@@ -124,12 +124,12 @@ export const UserProvider = ({ children }) => {
                     setIsAuthenticated(true);
 
                     // Store user data and token info
-                    await SecureStore.setItemAsync(USER_KEY, JSON.stringify(userData));
+                    await AsyncStorage.setItem(USER_KEY, JSON.stringify(userData));
 
                     // Store auth token if available
                     const token = await firebaseUser.getIdToken();
                     if (token) {
-                        await SecureStore.setItemAsync(USER_TOKEN_KEY, token);
+                        await AsyncStorage.setItem(USER_TOKEN_KEY, token);
                     }
                 } else {
                     await clearStoredUserData();
@@ -191,7 +191,7 @@ export const UserProvider = ({ children }) => {
             try {
                 await auth.currentUser.reload();
                 const token = await auth.currentUser.getIdToken(true); // Force refresh
-                await SecureStore.setItemAsync(USER_TOKEN_KEY, token);
+                await AsyncStorage.setItem(USER_TOKEN_KEY, token);
                 return true;
             } catch (error) {
                 console.error('Error refreshing user session:', error);

@@ -483,17 +483,16 @@ const createUserProfile = async (user) => {
 ```
 
 ### Firestore Security Rules
-
 ```javascript
-// firestore.rules
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-  }
-}
+   // firestore.rules
+   rules_version = '2';
+   service cloud.firestore {
+     match /databases/{database}/documents {
+       match /users/{userId} {
+         allow read, write: if request.auth != null && request.auth.uid == userId;
+       }
+     }
+   }
 ```
 
 ## Resources
@@ -517,3 +516,62 @@ If you encounter issues:
 **Note**: This guide assumes you're using Expo SDK 49+ and Firebase v9+. For older versions, some APIs may differ.
 
 
+1. Create a release keystore (if you haven't already)
+```bash
+cd android/app
+keytool -genkeypair -v -storetype PKCS12 -keystore my-upload-key.keystore -alias my-key-alias -keyalg RSA -keysize 2048 -validity 10000
+```
+
+   Follow the prompts to set up your keystore. Make sure to remember the passwords and alias you set.
+
+2. Configure release signing
+   Edit android/gradle.properties:
+```properties
+   propertiesMYAPP_UPLOAD_STORE_FILE=my-upload-key.keystore
+   MYAPP_UPLOAD_KEY_ALIAS=my-key-alias
+   MYAPP_UPLOAD_STORE_PASSWORD=your_keystore_password
+   MYAPP_UPLOAD_KEY_PASSWORD=your_key_password
+```
+3. Update android/app/build.gradle
+```groovy
+   gradleandroid {
+       signingConfigs {
+           debug {
+               storeFile file('debug.keystore')
+               storePassword 'android'
+               keyAlias 'androiddebugkey'
+               keyPassword 'android'
+           }
+           release {
+               if (project.hasProperty('MYAPP_UPLOAD_STORE_FILE')) {
+                   storeFile file(MYAPP_UPLOAD_STORE_FILE)
+                   storePassword MYAPP_UPLOAD_STORE_PASSWORD
+                   keyAlias MYAPP_UPLOAD_KEY_ALIAS
+                   keyPassword MYAPP_UPLOAD_KEY_PASSWORD
+               }
+           }
+       }
+       buildTypes {
+           debug {
+               signingConfig signingConfigs.debug
+           }
+           release {
+               signingConfig signingConfigs.release
+               minifyEnabled false
+               proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+           }
+       }
+   }
+```
+
+4. Clean and rebuild
+```bash
+cd android
+   ./gradlew clean
+   ./gradlew bundleRelease
+   ```
+5. Verify the AAB
+   The new AAB should be at:
+```
+   android/app/build/outputs/bundle/release/app-release.aab
+```

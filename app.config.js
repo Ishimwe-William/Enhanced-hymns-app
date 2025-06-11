@@ -1,14 +1,14 @@
-// app.config.js
 import 'dotenv/config';
 
 export default ({config}) => {
     return {
         ...config,
-        name: "Hymns App",
+        name: "Indirimbo Zo Guhimbaza Imana",
         slug: "hymns-app",
-        version: "1.0.0",
+        version: "1.0.3",
         backgroundColor: "#ffffff",
         userInterfaceStyle: "automatic",
+        versionCode: 1,
         icon: "./assets/icon.png",
         splash: {
             image: "./assets/icon.png",

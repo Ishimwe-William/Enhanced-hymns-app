@@ -158,7 +158,6 @@ const EmptyHymnList = ({onHymnsDownloaded}) => {
                         icon={"cloud-download"}
                         text={downloading ? 'Downloading...' : 'Download All Hymns'}
                         onPress={downloadAllHymns}
-                        disabled={downloading}
                     />
                 )}
 

@@ -25,7 +25,7 @@ const HymnContent = ({hymn}) => {
             // Add the stanza
             content.push(
                 <View key={`stanza-${stanza.stanzaNumber}`} style={styles.stanzaContainer}>
-                    { stanza.stanzaNumber !== 0 && <StanzaView stanza={stanza}/> }
+                    {stanza.stanzaNumber !== 0 && <StanzaView stanza={stanza}/>}
 
                 </View>
             );
@@ -61,6 +61,7 @@ const HymnContent = ({hymn}) => {
             flexGrow: 1,
         },
         content: {
+            flex: 1,
             padding: 20,
             paddingBottom: 40,
         },
@@ -85,9 +86,13 @@ const HymnContent = ({hymn}) => {
             color: colors.textSecondary,
             marginBottom: 4,
         },
+        originContainer: {
+            width: "80%",
+            justifyContent: 'flex-end',
+            alignItems: 'flex-end',
+        },
         origin: {
             fontSize: 14,
-            width: "80%",
             fontStyle: 'italic',
             color: '#888',
         },
@@ -115,7 +120,10 @@ const HymnContent = ({hymn}) => {
                                 <Text style={styles.hymnNumber}>Key: {hymn.doh}</Text>
                             )}
                             {hymn.origin && (
-                                <Text ellipsizeMode={'tail'} numberOfLines={1} style={styles.origin}>{hymn.origin}</Text>
+                                <View style={styles.originContainer}>
+                                    <Text ellipsizeMode={'tail'} numberOfLines={1}
+                                          style={styles.origin}>{hymn.origin}</Text>
+                                </View>
                             )}
                         </View>
                     </>

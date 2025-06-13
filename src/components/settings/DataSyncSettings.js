@@ -2,7 +2,7 @@ import React from 'react';
 import { ListItem } from '../ui/ListItem';
 import { SwitchItem } from '../ui/SwitchItem';
 import SettingsSection from './SettingsSection';
-import Alert from './MyAlert';
+import Alert from '../ui/MyAlert';
 
 const DataSyncSettings = ({
                               preferences,

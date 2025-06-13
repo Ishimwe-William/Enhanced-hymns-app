@@ -1,7 +1,7 @@
 import React from 'react';
 import { ListItem } from '../ui/ListItem';
 import SettingsSection from './SettingsSection';
-import Alert from './MyAlert';
+import Alert from '../ui/MyAlert';
 
 const AccountSettings = ({ settingsLoading, onResetSettings }) => {
     const handleResetSettings = () => {

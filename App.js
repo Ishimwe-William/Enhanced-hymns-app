@@ -1,5 +1,5 @@
 import React, {useCallback, useEffect, useState} from "react";
-import {Alert, View} from "react-native";
+import {Alert} from "react-native";
 import * as SplashScreen from "expo-splash-screen";
 import {useFonts} from "expo-font";
 
@@ -12,6 +12,7 @@ import {PreferencesProvider} from "./src/context/PreferencesContext";
 import {HymnProvider} from './src/context/HymnContext';
 import ThemedApp from './src/ThemedApp';
 import {NetworkProvider} from "./src/context/NetworkContext";
+import {GestureHandlerRootView} from "react-native-gesture-handler";
 
 SplashScreen.preventAutoHideAsync().catch((err) => console.error("Error preventing splash screen auto-hide:", err));
 
@@ -42,7 +43,7 @@ function AppContent({ onAppReady }) {
     }, [dbInitialized, authInitialized, dbInitError]);
 
     return (
-        <View style={{ flex: 1 }}>
+        <GestureHandlerRootView style={{ flex: 1 }}>
             <NetworkProvider>
                 <ThemeProvider>
                     <PreferencesProvider>
@@ -52,7 +53,7 @@ function AppContent({ onAppReady }) {
                     </PreferencesProvider>
                 </ThemeProvider>
             </NetworkProvider>
-        </View>
+        </GestureHandlerRootView>
     );
 }
 

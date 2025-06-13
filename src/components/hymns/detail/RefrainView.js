@@ -20,6 +20,7 @@ const RefrainView = ({ refrain }) => {
             marginBottom: 8,
         },
         text: {
+            textAlign: 'center',
             fontSize: 18,
             lineHeight: 28,
             color: colors.textSecondary,

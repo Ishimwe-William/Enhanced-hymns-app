@@ -3,7 +3,7 @@ import {View, ScrollView, Text, StyleSheet, ActivityIndicator} from 'react-nativ
 import {useTheme} from '../../context/ThemeContext';
 import {useHymns} from '../../context/HymnContext';
 import {usePreferences} from '../../context/PreferencesContext';
-import Alert from '../../components/settings/MyAlert';
+import Alert from '../ui/MyAlert';
 import WarningBanner from "../ui/WarningBanner";
 import {IconTextButton} from "../ui/IconTextButton";
 

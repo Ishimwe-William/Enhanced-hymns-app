@@ -29,7 +29,7 @@ export const useHymns = () => {
   return context;
 };
 
-export const HymnProvider = ({ children }) => {
+export const HymnProvider = ({ children, dbInitialized }) => {
   const [hymns, setHymns] = useState([]);
   const [favorites, setFavorites] = useState([]);
   const [recentHymns, setRecentHymns] = useState([]);
@@ -44,8 +44,10 @@ export const HymnProvider = ({ children }) => {
   }, [user?.uid, preferences.syncFavorites, isOffline]);
 
   useEffect(() => {
-    loadHymns(setHymns, setLoading, isOffline, preferences.offlineDownload);
-  }, [isOffline, preferences.offlineDownload]);
+    if (dbInitialized) {
+      loadHymns(setHymns, setLoading, isOffline, preferences.offlineDownload);
+    }
+  }, [dbInitialized, isOffline, preferences.offlineDownload]);
 
   useEffect(() => {
     if (!user?.uid) {
@@ -61,7 +63,8 @@ export const HymnProvider = ({ children }) => {
     loading,
     syncing,
     isOffline,
-    syncHymns: () => syncHymns(true, setSyncing, setHymns, preferences.offlineDownload, isOffline),        loadHymns: () => loadHymns(setHymns, setLoading, isOffline, preferences.offlineDownload),
+    syncHymns: () => syncHymns(true, setSyncing, setHymns, preferences.offlineDownload, isOffline),
+    loadHymns: () => loadHymns(setHymns, setLoading, isOffline, preferences.offlineDownload),
     loadHymnDetails: (hymnId) => loadHymnDetails(hymnId, isOffline, (hymn) => addToRecent(hymn, recentHymns, setRecentHymns, user?.uid, preferences.syncFavorites, isOffline)),
     toggleFavorite: (hymn) => toggleFavorite(hymn, favorites, setFavorites),
     isFavorite: (hymnId) => isFavorite(hymnId, favorites),

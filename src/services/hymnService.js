@@ -1,4 +1,4 @@
-import {collection, doc, getDoc, updateDoc, getDocs, orderBy, query, where, limit} from 'firebase/firestore';
+import {collection, doc, getDoc, updateDoc, getDocs, orderBy, query, where} from 'firebase/firestore';
 import {db} from "../config/firebaseConfig";
 import {fetchHymnById} from "./localHymnService";
 import NetInfo from "@react-native-community/netinfo";
@@ -7,7 +7,6 @@ const checkNetworkConnection = async () => {
     const netInfo = await NetInfo.fetch();
     return netInfo.isConnected;
 };
-
 export const fetchHymns = async () => {
         const isConnected = await checkNetworkConnection();
     try {
@@ -35,10 +34,8 @@ export const fetchHymns = async () => {
         }
     }
 };
-
 export const fetchUpdatedHymns = async (since) => {
     try {
-        // Check network connectivity first
             const isConnected = await checkNetworkConnection();
         if (!isConnected) {
             console.log('No internet connection for sync');
@@ -75,11 +72,8 @@ export const fetchUpdatedHymns = async (since) => {
         throw error;
     }
 };
-
 export const fetchHymnDetails = async (hymnId) => {
     try {
-        // hymnId = String(hymnId).padStart(3, '0');
-
         console.log('Fetching hymn details for ID:', hymnId);
 
         // Check network connectivity first
@@ -135,7 +129,6 @@ export const fetchHymnDetails = async (hymnId) => {
         throw error;
     }
 };
-
 export const updateHymnData = async (hymnId, hymnData) => {
     try {
         // Validate input
@@ -170,32 +163,5 @@ export const updateHymnData = async (hymnId, hymnData) => {
         } else {
             throw new Error('Failed to update hymn in database');
         }
-    }
-};
-
-// Additional utility function to test connection to Firebase
-export const testFirebaseConnection = async () => {
-    try {
-            const isConnected = await checkNetworkConnection();
-        if (!isConnected) {
-            return { connected: false, error: 'No internet connection' };
-        }
-
-        // Try to fetch a single document to test Firebase connection
-        const hymnsCollection = collection(db, 'hymns');
-        const testQuery = query(hymnsCollection, orderBy('number'), limit(1));
-        const testSnapshot = await getDocs(testQuery);
-
-        return {
-            connected: true,
-            documentsFound: testSnapshot.size,
-            message: 'Firebase connection successful'
-        };
-    } catch (error) {
-        console.error('Firebase connection test failed:', error);
-        return {
-            connected: false,
-            error: error.message || 'Firebase connection failed'
-        };
     }
 };

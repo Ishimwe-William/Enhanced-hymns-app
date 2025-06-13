@@ -1,5 +1,5 @@
 import React, {useCallback, useEffect, useState} from "react";
-import {View} from "react-native";
+import {Alert, View} from "react-native";
 import * as SplashScreen from "expo-splash-screen";
 import {useFonts} from "expo-font";
 
@@ -15,9 +15,10 @@ import {NetworkProvider} from "./src/context/NetworkContext";
 
 SplashScreen.preventAutoHideAsync().catch((err) => console.error("Error preventing splash screen auto-hide:", err));
 
-function AppContent({onAppReady}) {
-    const {authInitialized} = useUser();
+function AppContent({ onAppReady }) {
+    const { authInitialized } = useUser();
     const [dbInitialized, setDbInitialized] = useState(false);
+    const [dbInitError, setDbInitError] = useState(null);
 
     useEffect(() => {
         const prepareDb = async () => {
@@ -25,8 +26,8 @@ function AppContent({onAppReady}) {
                 await initDatabase();
                 setDbInitialized(true);
             } catch (e) {
-                console.warn("DB init error:", e);
-                setDbInitialized(true);
+                console.error("DB init error:", e);
+                setDbInitError(e); // Do not set dbInitialized to true on error
             }
         };
         prepareDb();
@@ -35,19 +36,21 @@ function AppContent({onAppReady}) {
     useEffect(() => {
         if (dbInitialized && authInitialized) {
             onAppReady();
+        } else if (dbInitError) {
+            Alert.alert('Database Error', 'Failed to initialize database. Please restart the app.');
         }
-    }, [dbInitialized, authInitialized]);
+    }, [dbInitialized, authInitialized, dbInitError]);
 
     return (
-        <View style={{flex: 1}}>
+        <View style={{ flex: 1 }}>
             <NetworkProvider>
-            <ThemeProvider>
-                <PreferencesProvider>
-                    <HymnProvider>
-                        <ThemedApp/>
-                    </HymnProvider>
-                </PreferencesProvider>
-            </ThemeProvider>
+                <ThemeProvider>
+                    <PreferencesProvider>
+                        <HymnProvider dbInitialized={dbInitialized}>
+                            <ThemedApp />
+                        </HymnProvider>
+                    </PreferencesProvider>
+                </ThemeProvider>
             </NetworkProvider>
         </View>
     );

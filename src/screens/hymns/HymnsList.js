@@ -31,10 +31,6 @@ const HymnsList = () => {
         }
     };
 
-    if (loading) {
-        return <LoadingScreen message="Loading hymns..."/>;
-    }
-
     return (
         <View style={styles.container}>
             <Header
@@ -43,19 +39,24 @@ const HymnsList = () => {
                 showRefresh
                 onMenu={handleMenuPress}
                 onRefresh={loadHymns}
-                onMore={() => {}}
-            />
-            <SearchBar
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-                placeholder="Search hymns..."
-            />
-            {filteredHymns.length === 0 ? (
-                <EmptyHymnList/>
-            ) : (
-                <HymnListView hymns={filteredHymns} onHymnSelect={handleHymnSelect}/>
-            )}
-
+                onMore={() => {
+                }}
+            />{loading ? (
+            <LoadingScreen message="Loading hymns..."/>
+        ) : (
+            <>
+                <SearchBar
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                    placeholder="Search hymns..."
+                />
+                {filteredHymns.length === 0 ? (
+                    <EmptyHymnList/>
+                ) : (
+                    <HymnListView hymns={filteredHymns} onHymnSelect={handleHymnSelect}/>
+                )}
+            </>
+        )}
         </View>
     );
 };

@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useState} from 'react';
-import {ScrollView, StyleSheet, Text, View} from 'react-native';
+import {ScrollView, StyleSheet, View} from 'react-native';
 import {DrawerActions, useNavigation} from '@react-navigation/native';
 import Header from '../components/ui/Header';
 import {usePreferences} from '../context/PreferencesContext';
@@ -13,12 +13,13 @@ import OfflineStorageSettings from '../components/settings/OfflineStorageSetting
 import DataSyncSettings from '../components/settings/DataSyncSettings';
 import NotificationSettings from '../components/settings/NotificationSettings';
 import AccountSettings from '../components/settings/AccountSettings';
+import LoadingScreen from "../components/LoadingScreen";
 
 const SettingsScreen = () => {
     const navigation = useNavigation();
-    const { theme, themeMode, toggleTheme } = useTheme();
+    const {theme, themeMode, toggleTheme} = useTheme();
     const colors = theme.colors;
-    const { signIn } = useUser();
+    const {signIn} = useUser();
 
     const {
         preferences,
@@ -32,7 +33,7 @@ const SettingsScreen = () => {
         dbInitialized,
     } = usePreferences();
 
-    const { forceSync, syncHymns, setSyncing, isOffline, clearAllHymns, getLocalHymnCount } = useHymns();
+    const {forceSync, syncHymns, setSyncing, isOffline, clearAllHymns, getLocalHymnCount} = useHymns();
 
     const [settingsLoading, setSettingsLoading] = useState(false);
     const [downloadingHymns, setDownloadingHymns] = useState(false);
@@ -170,15 +171,6 @@ const SettingsScreen = () => {
         });
     }, [colors]);
 
-    // Show loading screen while database is initializing
-    if (!dbInitialized || loading) {
-        return (
-            <View style={styles.loadingContainer}>
-                <Text style={styles.loadingText}>Loading Settings...</Text>
-            </View>
-        );
-    }
-
     return (
         <View style={styles.container}>
             <Header
@@ -188,58 +180,62 @@ const SettingsScreen = () => {
                 onMenu={handleMenuPress}
                 showMore={false}
             />
-            <ScrollView style={styles.content}>
-                <SettingsBanners
-                    isLoggedIn={isLoggedIn}
-                    syncing={syncing}
-                    downloadingHymns={downloadingHymns}
-                    downloadProgress={downloadProgress}
-                    settingsLoading={settingsLoading}
-                    isOffline={isOffline}
-                    signIn={signIn}
-                />
+            {!dbInitialized || loading ? (
+                <LoadingScreen message={"Loading Settings..."}/>
+            ) : (
+                <ScrollView style={styles.content}>
+                    <SettingsBanners
+                        isLoggedIn={isLoggedIn}
+                        syncing={syncing}
+                        downloadingHymns={downloadingHymns}
+                        downloadProgress={downloadProgress}
+                        settingsLoading={settingsLoading}
+                        isOffline={isOffline}
+                        signIn={signIn}
+                    />
 
-                <DisplaySettings
-                    preferences={preferences}
-                    updatePreference={updatePreference}
-                    updateNestedPreference={updateNestedPreference}
-                    settingsLoading={settingsLoading}
-                    toggleTheme={toggleTheme}
-                />
+                    <DisplaySettings
+                        preferences={preferences}
+                        updatePreference={updatePreference}
+                        updateNestedPreference={updateNestedPreference}
+                        settingsLoading={settingsLoading}
+                        toggleTheme={toggleTheme}
+                    />
 
-                <OfflineStorageSettings
-                    preferences={preferences}
-                    updatePreference={updatePreference}
-                    settingsLoading={settingsLoading}
-                    downloadingHymns={downloadingHymns}
-                    isOffline={isOffline}
-                    localHymnCount={localHymnCount}
-                    onDownloadAllHymns={downloadAllHymns}
-                    onUpdateOfflineHymns={updateOfflineHymns}
-                    onClearOfflineHymns={clearOfflineHymns}
-                />
+                    <OfflineStorageSettings
+                        preferences={preferences}
+                        updatePreference={updatePreference}
+                        settingsLoading={settingsLoading}
+                        downloadingHymns={downloadingHymns}
+                        isOffline={isOffline}
+                        localHymnCount={localHymnCount}
+                        onDownloadAllHymns={downloadAllHymns}
+                        onUpdateOfflineHymns={updateOfflineHymns}
+                        onClearOfflineHymns={clearOfflineHymns}
+                    />
 
-                <DataSyncSettings
-                    preferences={preferences}
-                    updatePreference={updatePreference}
-                    settingsLoading={settingsLoading}
-                    syncing={syncing}
-                    isLoggedIn={isLoggedIn}
-                    isOffline={isOffline}
-                    onSyncWithCloud={handleSyncWithCloud}
-                />
+                    <DataSyncSettings
+                        preferences={preferences}
+                        updatePreference={updatePreference}
+                        settingsLoading={settingsLoading}
+                        syncing={syncing}
+                        isLoggedIn={isLoggedIn}
+                        isOffline={isOffline}
+                        onSyncWithCloud={handleSyncWithCloud}
+                    />
 
-                <NotificationSettings
-                    preferences={preferences}
-                    updateNestedPreference={updateNestedPreference}
-                    settingsLoading={settingsLoading}
-                />
+                    <NotificationSettings
+                        preferences={preferences}
+                        updateNestedPreference={updateNestedPreference}
+                        settingsLoading={settingsLoading}
+                    />
 
-                <AccountSettings
-                    settingsLoading={settingsLoading}
-                    onResetSettings={handleResetSettings}
-                />
-            </ScrollView>
+                    <AccountSettings
+                        settingsLoading={settingsLoading}
+                        onResetSettings={handleResetSettings}
+                    />
+                </ScrollView>
+            )}
         </View>
     );
 };

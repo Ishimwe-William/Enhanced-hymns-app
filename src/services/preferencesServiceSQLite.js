@@ -1,11 +1,7 @@
-import * as SQLite from 'expo-sqlite';
 import {
-    savePreferencesToCloud,
-    loadPreferencesFromCloud,
     syncPreferences as cloudSyncPreferences
 } from './preferencesService';
-
-const database = SQLite.openDatabaseSync('hymns');
+import database from "../utils/database";
 
 export const initPreferencesDB = async () => {
     try {

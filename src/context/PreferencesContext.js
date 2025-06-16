@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useUser } from './UserContext';
 import {
     savePreferencesToCloud,
@@ -11,6 +12,7 @@ import {
     deletePreferencesFromDB,
     syncPreferences as syncPreferencesWithCloud
 } from '../services/preferencesServiceSQLite';
+import { useTheme } from "./ThemeContext";
 
 const PreferencesContext = createContext();
 
@@ -46,6 +48,7 @@ export const PreferencesProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
     const [syncing, setSyncing] = useState(false);
     const [dbInitialized, setDbInitialized] = useState(false);
+    const { updateTheme } = useTheme();
 
     // Initialize database on app start
     useEffect(() => {
@@ -77,6 +80,11 @@ export const PreferencesProvider = ({ children }) => {
                     if (isCancelled) return;
                     setPreferences(mergedPrefs);
 
+                    // Update theme immediately when preferences are loaded
+                    if (mergedPrefs.theme) {
+                        updateTheme(mergedPrefs.theme);
+                    }
+
                     // Sync with cloud if enabled
                     if (mergedPrefs.syncFavorites) {
                         try {
@@ -87,6 +95,11 @@ export const PreferencesProvider = ({ children }) => {
                             if (JSON.stringify(syncedPreferences) !== JSON.stringify(mergedPrefs)) {
                                 setPreferences(syncedPreferences);
                                 await savePreferencesToDB(user.uid, syncedPreferences);
+
+                                // Update theme again if it changed after sync
+                                if (syncedPreferences.theme && syncedPreferences.theme !== mergedPrefs.theme) {
+                                    updateTheme(syncedPreferences.theme);
+                                }
                             }
                         } catch (err) {
                             console.log('Sync failed, using local preferences:', err.message);
@@ -95,12 +108,28 @@ export const PreferencesProvider = ({ children }) => {
                         }
                     }
                 } else {
-                    // User not logged in, use defaults
-                    setPreferences(DEFAULT_PREFERENCES);
+                    // User not logged in, load guest preferences from AsyncStorage
+                    try {
+                        const guestPrefs = await AsyncStorage.getItem('guestPreferences');
+                        if (guestPrefs) {
+                            const parsedPrefs = JSON.parse(guestPrefs);
+                            const mergedPrefs = { ...DEFAULT_PREFERENCES, ...parsedPrefs };
+                            setPreferences(mergedPrefs);
+                            updateTheme(mergedPrefs.theme);
+                        } else {
+                            setPreferences(DEFAULT_PREFERENCES);
+                            updateTheme(DEFAULT_PREFERENCES.theme);
+                        }
+                    } catch (error) {
+                        console.error('Error loading guest preferences:', error);
+                        setPreferences(DEFAULT_PREFERENCES);
+                        updateTheme(DEFAULT_PREFERENCES.theme);
+                    }
                 }
             } catch (err) {
                 console.error('Error loading preferences:', err);
                 setPreferences(DEFAULT_PREFERENCES);
+                updateTheme(DEFAULT_PREFERENCES.theme);
             } finally {
                 if (!isCancelled) setLoading(false);
             }
@@ -111,7 +140,7 @@ export const PreferencesProvider = ({ children }) => {
         return () => {
             isCancelled = true;
         };
-    }, [user?.uid, dbInitialized]);
+    }, [user?.uid, dbInitialized, updateTheme]);
 
     // Save preferences to SQLite and optionally to cloud
     const savePreferences = async (newPreferences) => {
@@ -140,7 +169,23 @@ export const PreferencesProvider = ({ children }) => {
         try {
             const newPreferences = { ...preferences, [key]: value };
             setPreferences(newPreferences);
-            await savePreferences(newPreferences);
+
+            // If theme preference is being updated, notify ThemeProvider immediately
+            if (key === 'theme') {
+                updateTheme(value);
+            }
+
+            // Save preferences regardless of login status
+            if (user?.uid) {
+                await savePreferences(newPreferences);
+            } else {
+                // Save to AsyncStorage when not logged in
+                try {
+                    await AsyncStorage.setItem('guestPreferences', JSON.stringify(newPreferences));
+                } catch (error) {
+                    console.error('Error saving guest preferences:', error);
+                }
+            }
         } catch (error) {
             console.error('Error updating preference:', error);
             throw error;
@@ -158,7 +203,18 @@ export const PreferencesProvider = ({ children }) => {
                 }
             };
             setPreferences(newPreferences);
-            await savePreferences(newPreferences);
+
+            // Save preferences regardless of login status
+            if (user?.uid) {
+                await savePreferences(newPreferences);
+            } else {
+                // Save to AsyncStorage when not logged in
+                try {
+                    await AsyncStorage.setItem('guestPreferences', JSON.stringify(newPreferences));
+                } catch (error) {
+                    console.error('Error saving guest preferences:', error);
+                }
+            }
         } catch (error) {
             console.error('Error updating nested preference:', error);
             throw error;
@@ -169,6 +225,8 @@ export const PreferencesProvider = ({ children }) => {
     const resetPreferences = async () => {
         try {
             setPreferences(DEFAULT_PREFERENCES);
+            // Update theme to default
+            updateTheme(DEFAULT_PREFERENCES.theme);
             await savePreferences(DEFAULT_PREFERENCES);
         } catch (error) {
             console.error('Error resetting preferences:', error);
@@ -187,6 +245,12 @@ export const PreferencesProvider = ({ children }) => {
             const importedPrefs = JSON.parse(preferencesJson);
             const mergedPrefs = { ...DEFAULT_PREFERENCES, ...importedPrefs };
             setPreferences(mergedPrefs);
+
+            // Update theme from imported preferences
+            if (mergedPrefs.theme) {
+                updateTheme(mergedPrefs.theme);
+            }
+
             await savePreferences(mergedPrefs);
         } catch (error) {
             console.error('Error importing preferences:', error);
@@ -207,6 +271,12 @@ export const PreferencesProvider = ({ children }) => {
             if (cloudPreferences) {
                 const mergedPrefs = { ...DEFAULT_PREFERENCES, ...cloudPreferences };
                 setPreferences(mergedPrefs);
+
+                // Update theme from cloud preferences
+                if (mergedPrefs.theme) {
+                    updateTheme(mergedPrefs.theme);
+                }
+
                 await savePreferencesToDB(user.uid, mergedPrefs);
                 return true;
             }
@@ -226,6 +296,8 @@ export const PreferencesProvider = ({ children }) => {
                 await deletePreferencesFromDB(user.uid);
             }
             setPreferences(DEFAULT_PREFERENCES);
+            // Reset theme to default
+            updateTheme(DEFAULT_PREFERENCES.theme);
         } catch (error) {
             console.error('Error clearing user preferences:', error);
             throw error;

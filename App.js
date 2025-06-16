@@ -9,6 +9,7 @@ import {FontProvider} from "./src/context/FontContext";
 import {ThemeProvider} from './src/context/ThemeContext';
 import {UserProvider, useUser} from "./src/context/UserContext";
 import {PreferencesProvider} from "./src/context/PreferencesContext";
+import {useTheme} from "./src/context/ThemeContext";
 import {HymnProvider} from './src/context/HymnContext';
 import ThemedApp from './src/ThemedApp';
 import {NetworkProvider} from "./src/context/NetworkContext";
@@ -18,6 +19,7 @@ SplashScreen.preventAutoHideAsync().catch((err) => console.error("Error preventi
 
 function AppContent({ onAppReady }) {
     const { authInitialized } = useUser();
+    const { isThemeLoaded } = useTheme();
     const [dbInitialized, setDbInitialized] = useState(false);
     const [dbInitError, setDbInitError] = useState(null);
 
@@ -28,30 +30,29 @@ function AppContent({ onAppReady }) {
                 setDbInitialized(true);
             } catch (e) {
                 console.error("DB init error:", e);
-                setDbInitError(e); // Do not set dbInitialized to true on error
+                setDbInitError(e);
             }
         };
         prepareDb();
     }, []);
 
     useEffect(() => {
-        if (dbInitialized && authInitialized) {
+        // Wait for theme, database, and auth to be ready
+        if (dbInitialized && authInitialized && isThemeLoaded) {
             onAppReady();
         } else if (dbInitError) {
             Alert.alert('Database Error', 'Failed to initialize database. Please restart the app.');
         }
-    }, [dbInitialized, authInitialized, dbInitError]);
+    }, [dbInitialized, authInitialized, isThemeLoaded, dbInitError]);
 
     return (
         <GestureHandlerRootView style={{ flex: 1 }}>
             <NetworkProvider>
-                <ThemeProvider>
-                    <PreferencesProvider>
-                        <HymnProvider dbInitialized={dbInitialized}>
-                            <ThemedApp />
-                        </HymnProvider>
-                    </PreferencesProvider>
-                </ThemeProvider>
+                <PreferencesProvider>
+                    <HymnProvider dbInitialized={dbInitialized}>
+                        <ThemedApp />
+                    </HymnProvider>
+                </PreferencesProvider>
             </NetworkProvider>
         </GestureHandlerRootView>
     );
@@ -82,7 +83,9 @@ export default function App() {
     return (
         <UserProvider>
             <FontProvider>
-                <AppContent onAppReady={onAppReady}/>
+                <ThemeProvider>
+                    <AppContent onAppReady={onAppReady}/>
+                </ThemeProvider>
             </FontProvider>
         </UserProvider>
     );

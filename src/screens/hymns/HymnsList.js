@@ -1,17 +1,37 @@
-import React from 'react';
-import {View, StyleSheet} from 'react-native';
-import {useNavigation, DrawerActions} from '@react-navigation/native';
+import React, {useEffect, useState} from 'react';
+import {View, StyleSheet, Pressable} from 'react-native';
+import {useNavigation, DrawerActions, useIsFocused} from '@react-navigation/native';
 import Header from '../../components/ui/Header';
 import SearchBar from '../../components/ui/SearchBar';
 import HymnListView from '../../components/hymns/list/HymnListView';
 import LoadingScreen from '../../components/LoadingScreen';
 import {useHymns} from '../../context/HymnContext';
 import EmptyHymnList from "../../components/hymns/EmptyHymnList";
+import {Ionicons} from "@expo/vector-icons";
+import {useTheme} from "../../context/ThemeContext";
+import MyAlert from "../../components/ui/MyAlert";
 
 const HymnsList = () => {
     const navigation = useNavigation();
-    const {hymns, loading, loadHymns} = useHymns();
-    const [searchQuery, setSearchQuery] = React.useState('');
+    const {hymns, loading, loadHymns, getLocalHymnCount} = useHymns();
+    const [searchQuery, setSearchQuery] = useState('');
+    const {colors} = useTheme().theme;
+    const [localHymnCount, setLocalHymnCount] = useState(0);
+    const isFocused = useIsFocused();
+
+    useEffect(() => {
+        loadLocalHymnCount();
+    }, [isFocused, getLocalHymnCount,]);
+
+    const loadLocalHymnCount = async () => {
+        try {
+            const count = await getLocalHymnCount();
+            setLocalHymnCount(count);
+        } catch (error) {
+            console.error('Error loading local hymn count:', error);
+            setLocalHymnCount(0);
+        }
+    };
 
     const filteredHymns = hymns.filter(hymn =>
         hymn.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -31,6 +51,15 @@ const HymnsList = () => {
         }
     };
 
+    const downloadAllHymns = () => {
+        MyAlert.show("Downloading hymns", "This will take you to settings where you can download all hymns for offline access",
+            [{text: 'Cancel', style: "cancel"}, {
+                text: 'Go to Settings',
+                onPress: () => navigation.navigate("Settings")
+            }],
+        );
+    };
+
     return (
         <View style={styles.container}>
             <Header
@@ -39,17 +68,33 @@ const HymnsList = () => {
                 showRefresh
                 onMenu={handleMenuPress}
                 onRefresh={loadHymns}
-                onMore={() => {
-                }}
+                showMore={false}
             />{loading ? (
             <LoadingScreen message="Loading hymns..."/>
         ) : (
             <>
-                <SearchBar
-                    value={searchQuery}
-                    onChangeText={setSearchQuery}
-                    placeholder="Search hymns..."
-                />
+                <View style={styles.searchContainer}>
+                    <View style={styles.searchBar}>
+                        <SearchBar
+                            value={searchQuery}
+                            onChangeText={setSearchQuery}
+                            placeholder="Search hymns..."
+                        />
+                    </View>
+                    {localHymnCount === 0 && (
+                        <Pressable
+                            style={styles.downloadButton}
+                            android_ripple={{color: colors.textSecondary, borderless: true}}
+                            onPress={downloadAllHymns}
+                        >
+                            <Ionicons
+                                name={"cloud-download-outline"}
+                                size={24}
+                                color={colors.header}
+                            />
+                        </Pressable>
+                    )}
+                </View>
                 {filteredHymns.length === 0 ? (
                     <EmptyHymnList/>
                 ) : (
@@ -64,6 +109,19 @@ const HymnsList = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+    },
+    searchContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-around',
+    },
+    searchBar: {
+        flex: 1,
+    },
+    downloadButton: {
+        alignItems: 'flex-start',
+        marginLeft: 10,
+        marginRight: "8%",
     },
 });
 

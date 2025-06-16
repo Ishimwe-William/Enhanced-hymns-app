@@ -17,33 +17,36 @@ import {
 export const loadUserData = async (userId, syncFavorites, isOffline, setFavorites, setRecentHymns) => {
     try {
         if (userId) {
-            let localFavorites = await loadFavorites(userId);
+            let localFavorites = await loadFavorites(userId) || [];
             setFavorites(localFavorites);
-            let localRecent = await loadRecentHymns(userId);
+            let localRecent = await loadRecentHymns(userId) || [];
             setRecentHymns(localRecent);
             if (syncFavorites && !isOffline) {
                 try {
-                    const cloudFavorites = await loadFavoritesFromCloud(userId);
-                    if (
-                        cloudFavorites &&
-                        cloudFavorites.length > 0 &&
-                        JSON.stringify(cloudFavorites) !== JSON.stringify(localFavorites)
-                    ) {
+                    // Load cloud data
+                    const cloudFavorites = await loadFavoritesFromCloud(userId) || [];
+                    const cloudRecent = await loadRecentFromCloud(userId) || [];
+
+                    // Merge favorites: prioritize cloud if different and non-empty, else sync local to cloud
+                    if (cloudFavorites.length > 0 && JSON.stringify(cloudFavorites) !== JSON.stringify(localFavorites)) {
                         setFavorites(cloudFavorites);
                         await saveFavorites(userId, cloudFavorites);
-                    } else if (localFavorites.length > 0 && (!cloudFavorites || cloudFavorites.length === 0)) {
+                    } else if (localFavorites.length > 0 && cloudFavorites.length === 0) {
                         await saveFavoritesToCloud(userId, localFavorites);
                     }
-                    const cloudRecent = await loadRecentFromCloud(userId);
-                    if (
-                        cloudRecent &&
-                        cloudRecent.length > 0 &&
-                        JSON.stringify(cloudRecent) !== JSON.stringify(localRecent)
-                    ) {
-                        setRecentHymns(cloudRecent);
-                        await saveRecentHymns(userId, cloudRecent);
-                    } else if (localRecent.length > 0 && (!cloudRecent || cloudRecent.length === 0)) {
-                        await saveRecentToCloud(userId, localRecent);
+
+                    // Merge recent hymns: combine, deduplicate by id, sort by timestamp, limit to 20
+                    const allRecent = [...localRecent, ...cloudRecent];
+                    const uniqueRecent = allRecent
+                        .sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0)) // Sort by timestamp descending
+                        .filter((hymn, index, self) => index === self.findIndex((t) => t.id === hymn.id)) // Remove duplicates by id
+                        .slice(0, 20); // Limit to 20 entries
+                    if (JSON.stringify(uniqueRecent) !== JSON.stringify(localRecent)) {
+                        setRecentHymns(uniqueRecent);
+                        await saveRecentHymns(userId, uniqueRecent);
+                    }
+                    if (uniqueRecent.length > 0 && JSON.stringify(uniqueRecent) !== JSON.stringify(cloudRecent)) {
+                        await saveRecentToCloud(userId, uniqueRecent);
                     }
                 } catch (syncError) {
                     console.log('Cloud sync failed, using local data:', syncError.message);
@@ -92,27 +95,28 @@ export const saveRecentHymnsHandler = async (userId, recentData, syncFavorites, 
     }
 };
 
-export const toggleFavorite = async (hymn, favorites, setFavorites) => {
+export const toggleFavorite = async (hymn, favorites, setFavorites, userId, syncFavorites, isOffline) => {
     const newFavorites = favorites.find((fav) => fav.id === hymn.id)
         ? favorites.filter((fav) => fav.id !== hymn.id)
         : [...favorites, hymn];
     setFavorites(newFavorites);
-    await saveFavoritesHandler(hymn.userId, newFavorites);
+    await saveFavoritesHandler(userId, newFavorites, syncFavorites, isOffline);
 };
 
 export const addToRecent = async (hymn, recentHymns, setRecentHymns, userId, syncFavorites, isOffline) => {
-    const newRecent = [hymn, ...recentHymns.filter((recent) => recent.id !== hymn.id)].slice(0, 20);
+    const filteredRecent = recentHymns.filter((recent) => recent.id !== hymn.id);
+    const newRecent = [{ ...hymn, timestamp: new Date().toISOString() }, ...filteredRecent].slice(0, 20);
     setRecentHymns(newRecent);
     await saveRecentHymnsHandler(userId, newRecent, syncFavorites, isOffline);
 };
 
 export const clearRecentHymns = async (userId, setRecentHymns) => {
     try {
-        setRecentHymns([]);
-        await saveRecentHymns(userId, []);
+        await saveRecentHymns(userId, []); // Save to storage first
+        setRecentHymns([]); // Update state only on success
     } catch (error) {
         console.error('Error clearing recent hymns:', error);
-        throw error;
+        throw error; // Propagate error to caller
     }
 };
 

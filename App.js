@@ -1,24 +1,26 @@
-import React, {useCallback, useEffect, useState} from "react";
-import {Alert} from "react-native";
-import * as SplashScreen from "expo-splash-screen";
-import {useFonts} from "expo-font";
+import React, { useCallback, useEffect, useState } from 'react';
+import { Alert } from 'react-native';
+import * as SplashScreen from 'expo-splash-screen';
+import { useFonts } from 'expo-font';
 
-import {init as initDatabase} from "./src/services/localHymnService";
+import { init as initDatabase } from './src/services/localHymnService';
 
-import {FontProvider} from "./src/context/FontContext";
-import {ThemeProvider} from './src/context/ThemeContext';
-import {UserProvider, useUser} from "./src/context/UserContext";
-import {PreferencesProvider} from "./src/context/PreferencesContext";
-import {useTheme} from "./src/context/ThemeContext";
-import {HymnProvider} from './src/context/HymnContext';
+import { FontProvider } from './src/context/FontContext';
+import { ThemeProvider, useTheme } from './src/context/ThemeContext';
+import { UserProvider, useUser } from './src/context/UserContext';
+import { PreferencesProvider } from './src/context/PreferencesContext';
+import { HymnProvider } from './src/context/HymnContext';
+import { NetworkProvider } from './src/context/NetworkContext';
 import ThemedApp from './src/ThemedApp';
-import {NetworkProvider} from "./src/context/NetworkContext";
-import {GestureHandlerRootView} from "react-native-gesture-handler";
 
-SplashScreen.preventAutoHideAsync().catch((err) => console.error("Error preventing splash screen auto-hide:", err));
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
+SplashScreen.preventAutoHideAsync().catch((err) =>
+    console.error("Error preventing splash screen auto-hide:", err)
+);
 
 function AppContent({ onAppReady }) {
-    const { authInitialized } = useUser();
+    const { initializing: authInitializing } = useUser();
     const { isThemeLoaded } = useTheme();
     const [dbInitialized, setDbInitialized] = useState(false);
     const [dbInitError, setDbInitError] = useState(null);
@@ -37,13 +39,19 @@ function AppContent({ onAppReady }) {
     }, []);
 
     useEffect(() => {
-        // Wait for theme, database, and auth to be ready
-        if (dbInitialized && authInitialized && isThemeLoaded) {
-            onAppReady();
-        } else if (dbInitError) {
-            Alert.alert('Database Error', 'Failed to initialize database. Please restart the app.');
+        if (dbInitError) {
+            Alert.alert(
+                'Database Error',
+                'Failed to initialize database. Please restart the app.',
+                [{ text: 'OK', onPress: () => setDbInitError(null) }]
+            );
+            return;
         }
-    }, [dbInitialized, authInitialized, isThemeLoaded, dbInitError]);
+
+        if (dbInitialized && !authInitializing && isThemeLoaded) {
+            onAppReady();
+        }
+    }, [dbInitialized, authInitializing, isThemeLoaded, dbInitError, onAppReady]);
 
     return (
         <GestureHandlerRootView style={{ flex: 1 }}>
@@ -59,7 +67,7 @@ function AppContent({ onAppReady }) {
 }
 
 export default function App() {
-    const [fontsLoaded] = useFonts({
+    const [fontsLoaded, fontsError] = useFonts({
         'Matura MT Script Capitals': require('./assets/fonts/MATURASC.ttf'),
     });
 
@@ -70,21 +78,38 @@ export default function App() {
     }, []);
 
     useEffect(() => {
-        const maybeHide = async () => {
+        const hideSplashScreen = async () => {
             if (fontsLoaded && appReady) {
-                await SplashScreen.hideAsync();
+                try {
+                    await SplashScreen.hideAsync();
+                } catch (error) {
+                    console.error("Error hiding splash screen:", error);
+                }
             }
         };
-        maybeHide();
+        hideSplashScreen();
     }, [fontsLoaded, appReady]);
 
-    if (!fontsLoaded) return null;
+    useEffect(() => {
+        if (fontsError) {
+            console.error("Font loading error:", fontsError);
+            Alert.alert(
+                'Font Loading Error',
+                'Some fonts failed to load. The app will continue with default fonts.',
+                [{ text: 'OK' }]
+            );
+        }
+    }, [fontsError]);
+
+    if (!fontsLoaded && !fontsError) {
+        return null;
+    }
 
     return (
         <UserProvider>
             <FontProvider>
                 <ThemeProvider>
-                    <AppContent onAppReady={onAppReady}/>
+                    <AppContent onAppReady={onAppReady} />
                 </ThemeProvider>
             </FontProvider>
         </UserProvider>

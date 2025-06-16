@@ -1,7 +1,8 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import {getFirestore} from 'firebase/firestore';
-import {getAuth} from "firebase/auth";
 import Constants from 'expo-constants';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {initializeAuth, getReactNativePersistence } from 'firebase/auth';
 
 // Firebase configuration (replace with your actual values from Firebase Console)
 const firebaseConfig = {
@@ -17,7 +18,9 @@ const firebaseConfig = {
 // Ensure only one instance of Firebase is initialized
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-const auth = getAuth(app);
+const auth = initializeAuth(app, {
+    persistence: getReactNativePersistence(AsyncStorage)
+});
 
 const db = getFirestore(app);
 

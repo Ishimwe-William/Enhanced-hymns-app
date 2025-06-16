@@ -1,10 +1,11 @@
-import React, {createContext, useContext, useEffect, useState} from 'react';
+import React, {createContext, useContext, useEffect, useState, useRef} from 'react';
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
-import AsyncStorage  from "@react-native-async-storage/async-storage";
-import {GoogleAuthProvider, onAuthStateChanged, signInWithCredential, signOut} from 'firebase/auth';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import {GoogleAuthProvider, getAuth, onAuthStateChanged, signInWithCredential, signOut} from 'firebase/auth';
 import {auth} from '../config/firebaseConfig';
 import Constants from "expo-constants";
+import {deletePreferencesFromDB} from "../services/preferencesServiceSQLite";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -13,11 +14,12 @@ const USER_TOKEN_KEY = 'userAuthToken';
 
 const UserContext = createContext();
 
-export const UserProvider = ({ children }) => {
+export const UserProvider = ({children}) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [authInitialized, setAuthInitialized] = useState(false);
+    const hasInitializedAuth = useRef(false);
 
     const [request, response, promptAsync] = Google.useAuthRequest({
         androidClientId: Constants.expoConfig.extra.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
@@ -25,158 +27,52 @@ export const UserProvider = ({ children }) => {
         webClientId: Constants.expoConfig.extra.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
     });
 
-    // Enhanced function to check if user session is still valid
-    const checkUserSession = async () => {
-        try {
-            const storedUser = await AsyncStorage.getItem(USER_KEY);
-            const storedToken = await AsyncStorage.getItem(USER_TOKEN_KEY);
-
-            if (storedUser && storedToken) {
-                const userData = JSON.parse(storedUser);
-
-                // Check if the current Firebase user matches stored user
-                if (auth.currentUser && auth.currentUser.uid === userData.uid) {
-                    setUser(userData);
-                    setIsAuthenticated(true);
-                    return true;
-                }
-            }
-
-            // Clear invalid session data
-            await clearStoredUserData();
-            return false;
-        } catch (error) {
-            console.error('Error checking user session:', error);
-            await clearStoredUserData();
-            return false;
-        }
-    };
-
-    // Function to clear stored user data
-    const clearStoredUserData = async () => {
-        try {
-            await AsyncStorage.removeItem(USER_KEY);
-            await AsyncStorage.removeItem(USER_TOKEN_KEY);
-            setUser(null);
-            setIsAuthenticated(false);
-        } catch (error) {
-            console.error('Error clearing stored user data:', error);
-        }
-    };
-
-    // Load user from secure store on mount with enhanced validation
     useEffect(() => {
-        const initializeAuth = async () => {
-            try {
-                setLoading(true);
-
-                // First check if there's a stored user session
-                const hasValidSession = await checkUserSession();
-
-                if (!hasValidSession) {
-                    // Wait a bit for Firebase to initialize and check current user
-                    setTimeout(async () => {
-                        if (auth.currentUser) {
-                            // If Firebase has a current user but no stored session, sync them
-                            const firebaseUser = auth.currentUser;
-                            const userData = {
-                                uid: firebaseUser.uid,
-                                email: firebaseUser.email,
-                                displayName: firebaseUser.displayName,
-                                photoURL: firebaseUser.photoURL,
-                            };
-
-                            setUser(userData);
-                            setIsAuthenticated(true);
-                            await AsyncStorage.setItem(USER_KEY, JSON.stringify(userData));
-                        }
-                        setAuthInitialized(true);
-                        setLoading(false);
-                    }, 1000);
-                } else {
-                    setAuthInitialized(true);
-                    setLoading(false);
-                }
-            } catch (error) {
-                console.error('Error initializing auth:', error);
+        const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+            setUser(firebaseUser);
+            setIsAuthenticated(!!firebaseUser);
+            if (!hasInitializedAuth.current) {
                 setAuthInitialized(true);
                 setLoading(false);
-            }
-        };
-
-        initializeAuth();
-    }, []);
-
-    // Watch for Firebase auth changes with enhanced synchronization
-    useEffect(() => {
-        return onAuthStateChanged(auth, async (firebaseUser) => {
-            try {
-                if (firebaseUser) {
-                    const userData = {
-                        uid: firebaseUser.uid,
-                        email: firebaseUser.email,
-                        displayName: firebaseUser.displayName,
-                        photoURL: firebaseUser.photoURL,
-                        lastLogin: new Date().toISOString(),
-                    };
-
-                    setUser(userData);
-                    setIsAuthenticated(true);
-
-                    // Store user data and token info
-                    await AsyncStorage.setItem(USER_KEY, JSON.stringify(userData));
-
-                    // Store auth token if available
-                    const token = await firebaseUser.getIdToken();
-                    if (token) {
-                        await AsyncStorage.setItem(USER_TOKEN_KEY, token);
-                    }
-                } else {
-                    await clearStoredUserData();
-                }
-            } catch (error) {
-                console.error('Error in auth state change:', error);
-                await clearStoredUserData();
-            } finally {
-                if (authInitialized) {
-                    setLoading(false);
-                }
+                hasInitializedAuth.current = true;
             }
         });
-    }, [authInitialized]);
 
-    // Handle Google sign-in response
+        return () => unsubscribe();
+    }, []);
+
     useEffect(() => {
         if (response?.type === 'success') {
-            const { authentication } = response;
-            handleFirebaseSignIn(authentication);
-        } else if (response?.type === 'error') {
-            console.error('Google sign-in error:', response.error);
-            setLoading(false);
+            setLoading(true);
+            const {idToken, accessToken} = response.authentication;
+            const auth = getAuth();
+
+            const credential = GoogleAuthProvider.credential(idToken, accessToken);
+
+            signInWithCredential(auth, credential)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    AsyncStorage.setItem('user', JSON.stringify({
+                        uid: user.uid,
+                        email: user.email,
+                        name: user.displayName,
+                        photo: user.photoURL
+                    }));
+                    setLoading(false);
+                })
+                .catch((error) => {
+                    console.error("Error signing in to Firebase with Google credential:", error);
+                    setLoading(false);
+                });
         }
     }, [response]);
-
-    const handleFirebaseSignIn = async (authentication) => {
-        try {
-            setLoading(true);
-            const credential = GoogleAuthProvider.credential(
-                authentication.idToken,
-                authentication.accessToken
-            );
-            const result = await signInWithCredential(auth, credential);
-            // User state will be updated by onAuthStateChanged
-        } catch (error) {
-            console.error('Sign-in error:', error);
-            alert('Sign-in failed: ' + error.message);
-            setLoading(false);
-        }
-    };
 
     const handleSignOut = async () => {
         try {
             setLoading(true);
             await signOut(auth);
             await clearStoredUserData();
+            await deletePreferencesFromDB(user.uid);
         } catch (error) {
             console.error('Sign-out error:', error);
             alert('Sign-out failed: ' + error.message);
@@ -185,12 +81,11 @@ export const UserProvider = ({ children }) => {
         }
     };
 
-    // Function to manually refresh user session
     const refreshUserSession = async () => {
         if (auth.currentUser) {
             try {
                 await auth.currentUser.reload();
-                const token = await auth.currentUser.getIdToken(true); // Force refresh
+                const token = await auth.currentUser.getIdToken(true);
                 await AsyncStorage.setItem(USER_TOKEN_KEY, token);
                 return true;
             } catch (error) {
@@ -201,9 +96,43 @@ export const UserProvider = ({ children }) => {
         return false;
     };
 
-    // Function to check if user is ready (not loading and auth is initialized)
     const isUserReady = () => {
         return !loading && authInitialized;
+    };
+
+    const checkUserSession = async () => {
+        try {
+            const storedUser = await AsyncStorage.getItem(USER_KEY);
+            const storedToken = await AsyncStorage.getItem(USER_TOKEN_KEY);
+
+            if (storedUser && storedToken) {
+                const userData = JSON.parse(storedUser);
+
+                if (auth.currentUser && auth.currentUser.uid === userData.uid) {
+                    setUser(userData);
+                    setIsAuthenticated(true);
+                    return true;
+                }
+            }
+
+            await clearStoredUserData();
+            return false;
+        } catch (error) {
+            console.error('Error checking user session:', error);
+            await clearStoredUserData();
+            return false;
+        }
+    };
+
+    const clearStoredUserData = async () => {
+        try {
+            await AsyncStorage.removeItem(USER_KEY);
+            await AsyncStorage.removeItem(USER_TOKEN_KEY);
+            setUser(null);
+            setIsAuthenticated(false);
+        } catch (error) {
+            console.error('Error clearing stored user data:', error);
+        }
     };
 
     return (

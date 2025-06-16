@@ -35,13 +35,15 @@ export const HymnProvider = ({ children, dbInitialized }) => {
   const [recentHymns, setRecentHymns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
-  const { user } = useUser();
+  const { user, authInitialized } = useUser();
   const { preferences } = usePreferences();
   const { isOffline } = useNetwork();
 
   useEffect(() => {
-    loadUserData(user?.uid, preferences.syncFavorites, isOffline, setFavorites, setRecentHymns);
-  }, [user?.uid, preferences.syncFavorites, isOffline]);
+    if (authInitialized && user?.uid) {
+      loadUserData(user?.uid, preferences.syncFavorites, isOffline, setFavorites, setRecentHymns);
+    }
+  }, [user?.uid, preferences.syncFavorites, isOffline, authInitialized]);
 
   useEffect(() => {
     if (dbInitialized) {
@@ -50,10 +52,10 @@ export const HymnProvider = ({ children, dbInitialized }) => {
   }, [dbInitialized, isOffline, preferences.offlineDownload]);
 
   useEffect(() => {
-    if (!user?.uid) {
+    if (authInitialized && !user?.uid) {
       clearUserData(user?.uid, setFavorites, setRecentHymns);
     }
-  }, [user?.uid]);
+  }, [user?.uid, authInitialized]);
 
   const value = {
     hymns: getFilteredHymns(hymns, preferences),
@@ -66,7 +68,7 @@ export const HymnProvider = ({ children, dbInitialized }) => {
     syncHymns: () => syncHymns(true, setSyncing, setHymns, preferences.offlineDownload, isOffline),
     loadHymns: () => loadHymns(setHymns, setLoading, isOffline, preferences.offlineDownload),
     loadHymnDetails: (hymnId) => loadHymnDetails(hymnId, isOffline, (hymn) => addToRecent(hymn, recentHymns, setRecentHymns, user?.uid, preferences.syncFavorites, isOffline)),
-    toggleFavorite: (hymn) => toggleFavorite(hymn, favorites, setFavorites),
+    toggleFavorite: (hymn) => toggleFavorite(hymn, favorites, setFavorites, user?.uid, preferences.syncFavorites, isOffline),
     isFavorite: (hymnId) => isFavorite(hymnId, favorites),
     updateHymn: (firebaseId, hymnData) => updateHymn(firebaseId, hymnData, setHymns, isOffline),
     getHymnDisplaySettings: () => getHymnDisplaySettings(preferences),

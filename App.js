@@ -12,8 +12,8 @@ import { PreferencesProvider } from './src/context/PreferencesContext';
 import { HymnProvider } from './src/context/HymnContext';
 import { NetworkProvider } from './src/context/NetworkContext';
 import ThemedApp from './src/ThemedApp';
-
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import {setupTrackPlayer} from "./src/services/TrackPlayerService";
 
 SplashScreen.preventAutoHideAsync().catch((err) =>
     console.error("Error preventing splash screen auto-hide:", err)
@@ -36,6 +36,18 @@ function AppContent({ onAppReady }) {
             }
         };
         prepareDb();
+    }, []);
+
+    useEffect(() => {
+        const initializeTrackPlayer = async () => {
+            try {
+                await setupTrackPlayer();
+            } catch (error) {
+                console.error('Failed to initialize TrackPlayer:', error);
+            }
+        };
+
+        initializeTrackPlayer();
     }, []);
 
     useEffect(() => {

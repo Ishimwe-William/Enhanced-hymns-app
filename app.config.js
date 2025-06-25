@@ -1,39 +1,46 @@
 import 'dotenv/config';
 
-export default ({config}) => {
+export default ({ config }) => {
     return {
         ...config,
         name: "Indirimbo Zo Guhimbaza Imana",
         slug: "hymns-app",
         description: "An app for accessing and singing hymns in Kinyarwanda.",
-        version: "1.0.9",
+        version: "1.1.1",
         backgroundColor: "#ffffff",
         userInterfaceStyle: "automatic",
         icon: "./assets/icon.png",
         splash: {
             image: "./assets/icon.png",
             resizeMode: "native",
-            backgroundColor: "#ffffff"
+            backgroundColor: "#ffffff",
         },
         assetBundlePatterns: ["**/*"],
         scheme: "com.bunsenplus.hymnsapp",
         android: {
+            permissions: [
+                "WAKE_LOCK",
+                "android.permission.RECORD_AUDIO",
+                "android.permission.MODIFY_AUDIO_SETTINGS",
+                "android.permission.FOREGROUND_SERVICE",
+                "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
+            ],
             package: "com.bunsenplus.hymnsapp",
             icon: "./assets/icon.png",
             adaptiveIcon: {
                 foregroundImage: "./assets/adaptive-icon.png",
-                backgroundColor: "#ffffff"
+                backgroundColor: "#ffffff",
             },
-            versionCode: 8,
+            versionCode: 10,
         },
         ios: {
             supportsTablet: true,
             bundleIdentifier: "com.bunsenplus.hymnsapp",
-            icon: "./assets/icon.png"
+            icon: "./assets/icon.png",
         },
         extra: {
             eas: {
-                projectId: "d7cb8427-b88f-40f9-a885-1ef8431ba4ff"
+                projectId: "d7cb8427-b88f-40f9-a885-1ef8431ba4ff",
             },
             // Environment variables
             EXPO_PUBLIC_FIREBASE_API_KEY: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
@@ -52,9 +59,6 @@ export default ({config}) => {
             EXPO_PUBLIC_PACKAGE_NAME: process.env.EXPO_PUBLIC_PACKAGE_NAME,
             EXPO_PUBLIC_GOOGLE_PLAY_ID: process.env.EXPO_PUBLIC_GOOGLE_PLAY_ID,
         },
-        plugins: [
-            "expo-secure-store",
-            "expo-sqlite"
-        ]
+        plugins: ["expo-secure-store", "expo-sqlite"],
     };
 };

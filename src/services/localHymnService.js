@@ -1,97 +1,205 @@
 import database from '../utils/database';
 
+
+
+/* ------------------------------------------------------------------ */
+/*  INITIALISATION                                                    */
+/* ------------------------------------------------------------------ */
 export const init = async () => {
     try {
-        // Enable WAL mode for better concurrency
         await database.runAsync('PRAGMA journal_mode = WAL');
 
-        // Perform all initialization steps in a single transaction
         await database.withTransactionAsync(async () => {
-            // Check if the 'hymns' table exists
+            /* ── 1.  Create table if it doesn’t exist ───────────────────── */
             const tableExists = await database.getFirstAsync(
                 "SELECT name FROM sqlite_master WHERE type='table' AND name='hymns'"
             );
 
             if (!tableExists) {
-                // Create the 'hymns' table if it doesn’t exist
                 await database.runAsync(`
-                    CREATE TABLE IF NOT EXISTS hymns
-                    (
-                        id INTEGER PRIMARY KEY NOT NULL,
-                        firebase_id TEXT NOT NULL UNIQUE,
-                        hymn_number INTEGER NOT NULL,
-                        origin TEXT NOT NULL,
-                        doh TEXT NULL,
-                        title TEXT NOT NULL,
-                        stanzas TEXT NOT NULL,
-                        refrains TEXT NULL,
-                        category TEXT NULL,
-                        updatedAt TEXT NULL,
-                        UNIQUE (hymn_number)
-                    )
-                `);
+          CREATE TABLE IF NOT EXISTS hymns (
+            id            INTEGER PRIMARY KEY NOT NULL,
+            firebase_id   TEXT    NOT NULL UNIQUE,
+            hymn_number   INTEGER NOT NULL,
+            origin        TEXT    NOT NULL,
+            doh           TEXT,
+            title         TEXT    NOT NULL,
+            stanzas       TEXT    NOT NULL,
+            refrains      TEXT,
+            category      TEXT,
+            audio_url     TEXT,                  
+            updatedAt     TEXT,
+            UNIQUE (hymn_number)
+          );
+        `);
             } else {
-                // Check for missing columns and add them if needed
-                const columns = await database.getAllAsync("PRAGMA table_info(hymns)");
-                const hasFirebaseId = columns.some(col => col.name === 'firebase_id');
-                const hasUpdatedAt = columns.some(col => col.name === 'updatedAt');
-                if (!hasFirebaseId) {
-                    await database.runAsync("ALTER TABLE hymns ADD COLUMN firebase_id TEXT NOT NULL DEFAULT ''");
-                }
-                if (!hasUpdatedAt) {
-                    await database.runAsync("ALTER TABLE hymns ADD COLUMN updatedAt TEXT NULL");
-                }
+                /* ── 2.  Add missing columns when upgrading ───────────────── */
+                const cols   = await database.getAllAsync('PRAGMA table_info(hymns)');
+                const hasCol = n => cols.some(c => c.name === n);
+
+                if (!hasCol('firebase_id')) await database.runAsync(
+                    "ALTER TABLE hymns ADD COLUMN firebase_id TEXT NOT NULL DEFAULT ''"
+                );
+                if (!hasCol('updatedAt'))   await database.runAsync(
+                    "ALTER TABLE hymns ADD COLUMN updatedAt TEXT"
+                );
+                if (!hasCol('audio_url'))   await database.runAsync(
+                    "ALTER TABLE hymns ADD COLUMN audio_url TEXT"
+                );
             }
 
-            // Optional: Initialize other tables (e.g., 'user_data') if your app uses them
+            /* ── 3.  Optional user_data table ───────────────────────────── */
             const userTableExists = await database.getFirstAsync(
                 "SELECT name FROM sqlite_master WHERE type='table' AND name='user_data'"
             );
             if (!userTableExists) {
                 await database.runAsync(`
-                    CREATE TABLE IF NOT EXISTS user_data
-                    (
-                        id INTEGER PRIMARY KEY NOT NULL,
-                        user_id TEXT NOT NULL,
-                        favorites TEXT,
-                        recent_hymns TEXT,
-                        UNIQUE (user_id)
-                    )
-                `);
+          CREATE TABLE IF NOT EXISTS user_data (
+            id            INTEGER PRIMARY KEY NOT NULL,
+            user_id       TEXT NOT NULL UNIQUE,
+            favorites     TEXT,
+            recent_hymns  TEXT
+          );
+        `);
             }
         });
-    } catch (error) {
-        console.error("Error initializing database:", error);
-        throw error;
+    } catch (err) {
+        console.error('Error initializing database:', err);
+        throw err;
     }
 };
 
+/* ------------------------------------------------------------------ */
+/*  CRUD HELPERS                                                      */
+/* ------------------------------------------------------------------ */
+
 export const fetchHymns = async () => {
     try {
-        const result = await database.getAllAsync('SELECT * FROM hymns ORDER BY hymn_number');
-        return constructHymns(result);
-    } catch (error) {
-        if (error.message.includes('no such table: hymns')) {
-            console.warn('Hymns table not found. Returning empty array.');
-            return [];
-        }
-        console.error("Error fetching hymns:", error);
-        throw error;
+        const rows = await database.getAllAsync('SELECT * FROM hymns ORDER BY hymn_number');
+        return constructHymns(rows);
+    } catch (err) {
+        if (err.message.includes('no such table: hymns')) return [];
+        console.error('Error fetching hymns:', err);
+        throw err;
     }
 };
 
 export const fetchHymnById = async (firebaseId) => {
     try {
-        const result = await database.getFirstAsync(
-            'SELECT * FROM hymns WHERE firebase_id = ? or hymn_number = ?',
+        const row = await database.getFirstAsync(
+            'SELECT * FROM hymns WHERE firebase_id = ? OR hymn_number = ?',
             [firebaseId, firebaseId]
         );
-        return result ? constructHymns([result])[0] : null;
-    } catch (error) {
-        console.error("Error fetching hymn by ID:", error);
-        throw error;
+        return row ? constructHymns([row])[0] : null;
+    } catch (err) {
+        console.error('Error fetching hymn by ID:', err);
+        throw err;
     }
-}
+};
+
+export const insertHymn = async (hymn) => {
+    try {
+        const {
+            id: firebaseId, number, origin, doh, title,
+            stanzas, refrains, category, updatedAt, audioUrl
+        } = hymn;
+
+        await database.runAsync(
+            `INSERT OR REPLACE INTO hymns
+         (firebase_id, hymn_number, origin, doh, title,
+          stanzas, refrains, category, audio_url, updatedAt)
+       VALUES (?,?,?,?,?,?,?,?,?,?)`,
+            [
+                firebaseId,
+                number,
+                origin,
+                doh,
+                title,
+                JSON.stringify(stanzas),
+                refrains ? JSON.stringify(refrains) : null,
+                category,
+                audioUrl ?? null,
+                updatedAt ?? null
+            ]
+        );
+    } catch (err) {
+        console.error('Error inserting hymn:', err);
+        throw err;
+    }
+};
+
+export const updateHymnByFirebaseId = async (firebaseId, hymn) => {
+    try {
+        const {
+            number, origin, doh, title,
+            stanzas, refrains, category, updatedAt, audioUrl
+        } = hymn;
+
+        await database.runAsync(
+            `UPDATE hymns
+          SET hymn_number = ?, origin = ?, doh = ?, title = ?,
+              stanzas = ?, refrains = ?, category = ?, audio_url = ?, updatedAt = ?
+        WHERE firebase_id = ?`,
+            [
+                number,
+                origin,
+                doh,
+                title,
+                JSON.stringify(stanzas),
+                refrains ? JSON.stringify(refrains) : null,
+                category,
+                audioUrl ?? null,
+                updatedAt ?? null,
+                firebaseId
+            ]
+        );
+    } catch (err) {
+        console.error('Error updating hymn:', err);
+        throw err;
+    }
+};
+
+/* ------------------------------------------------------------------ */
+/*  SYNC & HELPERS                                                    */
+/* ------------------------------------------------------------------ */
+
+export const syncHymns = async (remoteHymns) => {
+    try {
+        await database.runAsync('BEGIN TRANSACTION');
+        for (const hymn of remoteHymns) await insertHymn(hymn);
+        await database.runAsync('COMMIT');
+        return true;
+    } catch (err) {
+        await database.runAsync('ROLLBACK');
+        console.error('Error syncing hymns:', err);
+        throw err;
+    }
+};
+
+export const getLastSyncTime = async () => {
+    const row = await database.getFirstAsync(
+        'SELECT MAX(updatedAt) AS lastSync FROM hymns WHERE updatedAt IS NOT NULL'
+    );
+    return row?.lastSync ?? null;
+};
+
+/* ------------------------------------------------------------------ */
+/*  UTILITIES                                                         */
+/* ------------------------------------------------------------------ */
+
+const constructHymns = rows => rows.map(r => ({
+    id:         r.id,
+    firebaseId: r.firebase_id,
+    number:     r.hymn_number,
+    origin:     r.origin,
+    doh:        r.doh,
+    title:      r.title,
+    stanzas:    r.stanzas   ? JSON.parse(r.stanzas)   : [],
+    refrains:   r.refrains  ? JSON.parse(r.refrains)  : [],
+    category:   r.category,
+    audioUrl:   r.audio_url ?? null,
+    updatedAt:  r.updatedAt
+}));
 
 export const hasLocalHymns = async () => {
     try {
@@ -113,85 +221,6 @@ export const getLocalHymnCount = async () => {
     }
 }
 
-export const insertHymn = async (hymnData) => {
-    try {
-        const {id: firebaseId, number, origin, doh, title, stanzas, refrains, category, updatedAt} = hymnData;
-
-        return await database.runAsync(
-            'INSERT OR REPLACE INTO hymns (firebase_id, hymn_number, origin, doh, title, stanzas, refrains, category, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-            [
-                firebaseId,
-                number,
-                origin,
-                doh,
-                title,
-                JSON.stringify(stanzas),
-                refrains ? JSON.stringify(refrains) : null,
-                category,
-                updatedAt || null
-            ]
-        );
-    } catch (error) {
-        console.error("Error inserting hymn:", error);
-        throw error;
-    }
-}
-
-export const updateHymnByFirebaseId = async (firebaseId, hymnData) => {
-    try {
-        const {number, origin, doh, title, stanzas, refrains, category, updatedAt} = hymnData;
-
-        return await database.runAsync(
-            'UPDATE hymns SET hymn_number = ?, origin = ?, doh = ?, title = ?, stanzas = ?, refrains = ?, category = ?, updatedAt = ? WHERE firebase_id = ?',
-            [
-                number,
-                origin,
-                doh,
-                title,
-                JSON.stringify(stanzas),
-                refrains ? JSON.stringify(refrains) : null,
-                category,
-                updatedAt || null,
-                firebaseId
-            ]
-        );
-    } catch (error) {
-        console.error("Error updating hymn by firebase ID:", error);
-        throw error;
-    }
-}
-
-export const syncHymns = async (hymnsData) => {
-    try {
-        await database.runAsync('BEGIN TRANSACTION');
-
-        // Instead of deleting all, merge the data
-        for (const hymn of hymnsData) {
-            await insertHymn(hymn); // INSERT OR REPLACE handles the merge
-        }
-
-        await database.runAsync('COMMIT');
-        console.log("Hymns synchronized successfully");
-        return true;
-    } catch (error) {
-        await database.runAsync('ROLLBACK');
-        console.error("Error syncing hymns:", error);
-        throw error;
-    }
-}
-
-export const getLastSyncTime = async () => {
-    try {
-        const result = await database.getFirstAsync(
-            'SELECT MAX(updatedAt) as lastSync FROM hymns WHERE updatedAt IS NOT NULL'
-        );
-        return result?.lastSync || null;
-    } catch (error) {
-        console.error("Error getting last sync time:", error);
-        return null;
-    }
-}
-
 export const clearAllHymns = async () => {
     try {
         const result = await database.runAsync('DELETE FROM hymns');
@@ -204,19 +233,4 @@ export const clearAllHymns = async () => {
         console.error("Error clearing hymns:", error);
         throw error;
     }
-}
-
-const constructHymns = (rows) => {
-    return rows.map(row => ({
-        id: row.id,
-        firebaseId: row.firebase_id,
-        number: row.hymn_number,
-        origin: row.origin,
-        doh: row.doh,
-        title: row.title,
-        stanzas: row.stanzas ? JSON.parse(row.stanzas) : [],
-        refrains: row.refrains ? JSON.parse(row.refrains) : [],
-        category: row.category,
-        updatedAt: row.updatedAt
-    }));
 }

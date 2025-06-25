@@ -10,9 +10,9 @@ const FloatingButton = ({ name, size = 28, color = '#666', onPress, style }) => 
         button: {
             alignItems: 'center',
             justifyContent: 'center',
-            width: 50,
-            height: 50,
-            borderRadius: 25,
+            width: 46,
+            height: 46,
+            borderRadius: 23,
             backgroundColor: colors.primary,
             shadowColor: '#000',
             shadowOffset: {

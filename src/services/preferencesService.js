@@ -1,4 +1,3 @@
-// services/preferencesService.js
 import { doc, setDoc, getDoc, serverTimestamp} from 'firebase/firestore';
 import { db } from '../config/firebaseConfig';
 import { Alert } from 'react-native';

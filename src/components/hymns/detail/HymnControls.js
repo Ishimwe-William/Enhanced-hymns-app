@@ -1,4 +1,4 @@
-import React, {useState, useRef} from 'react';
+import React, {useState, useRef, useEffect} from 'react';
 import {
     View,
     StyleSheet,
@@ -8,13 +8,20 @@ import {
 import {useHymns} from '../../../context/HymnContext';
 import FloatingButton from '../../ui/FloatingButton';
 import {useTheme} from "../../../context/ThemeContext";
+import AudioTrackerPlayer from "../../audioPlayer/AudioTrackerPlayer";
 
-const HymnControls = ({hymn, onNext, onPrevious, onShare}) => {
+const HymnControls = ({hymn, onNext, onPrevious, onShare, disabled}) => {
     const {toggleFavorite, isFavorite} = useHymns();
     const [isExpanded, setIsExpanded] = useState(false);
+    const [showAudioPlayer, setShowAudioPlayer] = useState(false);
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [progress, setProgress] = useState({position: 0, duration: 0});
+
     const animatedHeight = useRef(new Animated.Value(0)).current;
+    const audioPlayerWidth = useRef(new Animated.Value(0)).current;
+    const progressOpacity = useRef(new Animated.Value(0)).current;
     const rotateAnim = useRef(new Animated.Value(0)).current;
-    const playButtonTranslateY = useRef(new Animated.Value(0)).current;
+    const audioPlayerRef = useRef(null);
 
     const {colors} = useTheme().theme;
 
@@ -38,49 +45,50 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare}) => {
             paddingVertical: 16,
             height: 80,
         },
-        alwaysVisibleContainer: {
+        bottomRow: {
             flexDirection: 'row',
             alignItems: 'center',
-            position: 'absolute',
-            bottom: 18,
-            right: 12,
+            justifyContent: 'space-between',
+            paddingHorizontal: 8,
+            paddingVertical: 6,
+            minHeight: 50,
+        },
+        alwaysVisibleContainer: {
+            flexDirection: 'row',
+            justifyContent: 'center',
+            flex: 1,
         },
         playButtonContainer: {
-            marginRight: 16,
-            width: 43,
-            height: 43,
-            borderRadius: 30,
-            backgroundColor: colors.text,
+            marginHorizontal: 1,
             alignItems: 'center',
             justifyContent: 'center',
             shadowColor: '#000',
             shadowOffset: {
                 width: 0,
-                height: 2,
+                height: 1,
             },
-            shadowOpacity: 0.15,
-            shadowRadius: 3,
-            elevation: 3,
+            shadowOpacity: 0.1,
+            shadowRadius: 2,
+            elevation: 2,
             borderWidth: 1,
+            borderRadius: 23,
             borderColor: colors.textSecondary,
         },
-        toggleButton: {
-            width: 43,
-            height: 43,
-            borderRadius: 30,
+        audioPlayerContainer: {
+            overflow: 'hidden',
+            borderRadius: 8,
+            marginRight: 8,
+        },
+        progressContainer: {
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            paddingHorizontal: 16,
+            paddingTop: 8,
             backgroundColor: colors.primary,
-            alignItems: 'center',
-            justifyContent: 'center',
-            shadowColor: '#000',
-            shadowOffset: {
-                width: 0,
-                height: 2,
-            },
-            shadowOpacity: 0.15,
-            shadowRadius: 3,
-            elevation: 3,
-            borderWidth: 1,
-            borderColor: colors.textSecondary,
+            borderTopLeftRadius: 8,
+            borderTopRightRadius: 8,
         },
         chevronContainer: {
             alignItems: 'center',
@@ -88,10 +96,19 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare}) => {
         },
     });
 
-
     const isHymnFavorite = isFavorite(hymn?.id);
 
+
+    // Effect to auto-expand when playing starts
+    useEffect(() => {
+        if (isPlaying && !isExpanded) {
+            toggleExpand();
+        }
+    }, [isPlaying]);
+
     const toggleExpand = () => {
+        if (disabled) return;
+
         const toValue = isExpanded ? 0 : 1;
 
         Animated.parallel([
@@ -105,28 +122,83 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare}) => {
                 duration: 300,
                 useNativeDriver: true,
             }),
-            Animated.timing(playButtonTranslateY, {
-                toValue: isExpanded ? 0 : -55, // Move Play button up when expanded
-                duration: 300,
-                useNativeDriver: true,
-            }),
         ]).start();
 
         setIsExpanded(!isExpanded);
     };
 
+    const toggleAudioPlayer = () => {
+        if (!hymn?.audioUrl || disabled) {
+            Alert.alert('No Audio', 'This hymn does not have an audio file available.');
+            return;
+        }
+
+        const toValue = showAudioPlayer ? 0 : 1;
+
+        Animated.timing(audioPlayerWidth, {
+            toValue: toValue,
+            duration: 300,
+            useNativeDriver: false,
+        }).start();
+
+        setShowAudioPlayer(!showAudioPlayer);
+    };
+
+    const handlePlayPause = async () => {
+        if (!hymn?.audioUrl || disabled) {
+            Alert.alert('No Audio', 'This hymn does not have an audio file available.');
+            return;
+        }
+
+        // Show audio player if not visible
+        if (!showAudioPlayer) {
+            toggleAudioPlayer();
+        }
+
+        // Call the audio player's play/pause method
+        if (audioPlayerRef.current) {
+            await audioPlayerRef.current.handlePlayPause();
+        }
+    };
+
     const handlePlay = () => {
-        Alert.alert('Play', 'Audio playback feature coming soon!');
+        if (disabled) return;
+        handlePlayPause();
+    };
+
+    const handleStop = async () => {
+        if (disabled) return;
+        if (audioPlayerRef.current) {
+            await audioPlayerRef.current.handleStop();
+        }
     };
 
     const handleFavorite = () => {
-        if (hymn) {
+        if (hymn && !disabled) {
             toggleFavorite(hymn);
         }
     };
 
     const handleFont = () => {
-        Alert.alert('Font Size', 'Font size adjustment coming soon!');
+        if (!disabled) {
+            Alert.alert('Font Size', 'Font size adjustment coming soon!');
+        }
+    };
+
+    // Handle playing state updates from AudioTrackerPlayer
+    const handlePlayingStateChange = (playing) => {
+        setIsPlaying(playing);
+    };
+
+    // Handle progress updates from AudioTrackerPlayer
+    const handleProgressUpdate = (progressData) => {
+        setProgress(progressData);
+    };
+
+    // Handle audio completion
+    const handleAudioComplete = () => {
+        setIsPlaying(false);
+        setProgress({position: 0, duration: 0});
     };
 
     // Interpolate animations
@@ -135,41 +207,46 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare}) => {
         outputRange: [0, 80], // Height of the expanded controls
     });
 
+    const playerWidth = audioPlayerWidth.interpolate({
+        inputRange: [0, 1],
+        outputRange: ['0%', '50%'], // Reduced width to fit better
+    });
+
     const controlButtons = [
         {
             name: 'chevron-back-outline',
             size: 28,
-            color: colors.text,
-            onPress: onPrevious,
-            label: 'More',
+            color: disabled ? colors.textSecondary : colors.text,
+            onPress: disabled ? null : onPrevious,
+            label: 'Previous',
         },
         {
             name: 'text-outline',
             size: 28,
-            color: colors.text,
-            onPress: handleFont,
+            color: disabled ? colors.textSecondary : colors.text,
+            onPress: disabled ? null : handleFont,
             label: 'Font',
         },
         {
             name: isHymnFavorite ? 'heart' : 'heart-outline',
             size: 28,
-            color: isHymnFavorite ? colors.danger : colors.text,
-            onPress: handleFavorite,
+            color: disabled ? colors.textSecondary : (isHymnFavorite ? colors.danger : colors.text),
+            onPress: disabled ? null : handleFavorite,
             label: 'Favorite',
         },
         {
             name: 'share-social-outline',
             size: 28,
-            color: colors.text,
-            onPress: onShare,
+            color: disabled ? colors.textSecondary : colors.text,
+            onPress: disabled ? null : onShare,
             label: 'Share',
         },
         {
             name: 'chevron-forward-outline',
             size: 28,
-            color: colors.text,
-            onPress: onNext,
-            label: 'More',
+            color: disabled ? colors.textSecondary : colors.text,
+            onPress: disabled ? null : onNext,
+            label: 'Next',
         },
     ];
 
@@ -187,44 +264,75 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare}) => {
                             size={button.size}
                             color={button.color}
                             onPress={button.onPress}
+                            disabled={disabled}
                         />
                     ))}
                 </View>
             </Animated.View>
 
-            {/* Always Visible Controls: Play Button and Chevron */}
-            <View style={styles.alwaysVisibleContainer}>
-                <Animated.View
-                    style={[
-                        styles.playButtonContainer,
-                        {transform: [{translateY: playButtonTranslateY}]},
-                    ]}
-                >
-                    <FloatingButton
-                        name="play"
-                        size={28}
-                        color={colors.notification}
-                        onPress={handlePlay}
-                    />
-                </Animated.View>
+            {/* Bottom Row: Audio Player and Always Visible Controls */}
+            <View style={styles.bottomRow}>
+                {/*{hymn?.audioUrl && (*/}
+                    <Animated.View
+                        style={[styles.audioPlayerContainer, {width: playerWidth}]}
+                    >
+                        <AudioTrackerPlayer
+                            ref={audioPlayerRef}
+                            hymn={hymn}
+                            onPlayingStateChange={handlePlayingStateChange}
+                            onProgressUpdate={handleProgressUpdate}
+                            onComplete={handleAudioComplete}
+                            showProgress={false} // Hide internal progress since we show it externally
+                        />
+                    </Animated.View>
+                {/*)}*/}
 
-                <Animated.View
-                    style={[
+                {/* Always Visible Controls - on the right side */}
+                <View style={styles.alwaysVisibleContainer}>
+                    {hymn?.audioUrl && (
+                        <>
+                            <View style={[
+                                styles.playButtonContainer,
+                                disabled && {opacity: 0.5}
+                            ]}>
+                                <FloatingButton
+                                    name={showAudioPlayer && isPlaying ? "pause" : "play"}
+                                    size={28}
+                                    color={hymn?.audioUrl ? colors.notification : colors.textSecondary}
+                                    onPress={handlePlay}
+                                    disabled={disabled}
+                                />
+                            </View>
+                            <View style={[
+                                styles.playButtonContainer,
+                                disabled && {opacity: 0.5}
+                            ]}>
+                                <FloatingButton
+                                    name={"stop"}
+                                    size={28}
+                                    color={colors.danger}
+                                    onPress={handleStop}
+                                    disabled={disabled}
+                                />
+                            </View>
+                        </>
+                    )}
+                    <View style={[
                         styles.playButtonContainer,
-                        {transform: [{translateY: playButtonTranslateY}]},
-                    ]}
-                >
-                    <FloatingButton
-                        name={isExpanded ? "chevron-up" : "chevron-down"}
-                        size={28}
-                        color={colors.text}
-                        onPress={toggleExpand}
-                    />
-                </Animated.View>
+                        disabled && {opacity: 0.5}
+                    ]}>
+                        <FloatingButton
+                            name={isExpanded ? "chevron-up" : "chevron-down"}
+                            size={24}
+                            color={colors.text}
+                            onPress={toggleExpand}
+                            disabled={disabled}
+                        />
+                    </View>
+                </View>
             </View>
         </View>
     );
 };
-
 
 export default HymnControls;

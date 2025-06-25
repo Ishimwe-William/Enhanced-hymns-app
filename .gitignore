@@ -40,3 +40,5 @@ yarn-error.*
 *.tsbuildinfo
 
 identifier.sqlite
+
+ios/sentry.properties

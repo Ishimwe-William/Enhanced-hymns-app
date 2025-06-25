@@ -15,11 +15,9 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare, disabled}) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const [showAudioPlayer, setShowAudioPlayer] = useState(false);
     const [isPlaying, setIsPlaying] = useState(false);
-    const [progress, setProgress] = useState({position: 0, duration: 0});
 
     const animatedHeight = useRef(new Animated.Value(0)).current;
     const audioPlayerWidth = useRef(new Animated.Value(0)).current;
-    const progressOpacity = useRef(new Animated.Value(0)).current;
     const rotateAnim = useRef(new Animated.Value(0)).current;
     const audioPlayerRef = useRef(null);
 
@@ -97,7 +95,6 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare, disabled}) => {
     });
 
     const isHymnFavorite = isFavorite(hymn?.id);
-
 
     // Effect to auto-expand when playing starts
     useEffect(() => {
@@ -190,17 +187,6 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare, disabled}) => {
         setIsPlaying(playing);
     };
 
-    // Handle progress updates from AudioTrackerPlayer
-    const handleProgressUpdate = (progressData) => {
-        setProgress(progressData);
-    };
-
-    // Handle audio completion
-    const handleAudioComplete = () => {
-        setIsPlaying(false);
-        setProgress({position: 0, duration: 0});
-    };
-
     // Interpolate animations
     const expandedHeight = animatedHeight.interpolate({
         inputRange: [0, 1],
@@ -272,20 +258,15 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare, disabled}) => {
 
             {/* Bottom Row: Audio Player and Always Visible Controls */}
             <View style={styles.bottomRow}>
-                {/*{hymn?.audioUrl && (*/}
-                    <Animated.View
-                        style={[styles.audioPlayerContainer, {width: playerWidth}]}
-                    >
-                        <AudioTrackerPlayer
-                            ref={audioPlayerRef}
-                            hymn={hymn}
-                            onPlayingStateChange={handlePlayingStateChange}
-                            onProgressUpdate={handleProgressUpdate}
-                            onComplete={handleAudioComplete}
-                            showProgress={false} // Hide internal progress since we show it externally
-                        />
-                    </Animated.View>
-                {/*)}*/}
+                <Animated.View
+                    style={[styles.audioPlayerContainer, {width: playerWidth}]}
+                >
+                    <AudioTrackerPlayer
+                        ref={audioPlayerRef}
+                        hymn={hymn}
+                        onPlayingStateChange={handlePlayingStateChange}
+                    />
+                </Animated.View>
 
                 {/* Always Visible Controls - on the right side */}
                 <View style={styles.alwaysVisibleContainer}>

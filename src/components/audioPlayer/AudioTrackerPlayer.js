@@ -13,7 +13,8 @@ import {useHymns} from "../../context/HymnContext";
 
 const AudioTrackerPlayer = forwardRef(({hymn, onPlayingStateChange}, ref) => {
     const [isPlayerReady, setIsPlayerReady] = useState(false);
-    const {playing, bufferingDuringPlay} = useIsPlaying();
+    const [isSeeking, setIsSeeking] = useState(false);
+    const {playing} = useIsPlaying();
     const progress = useProgress();
     const {isOffline} = useHymns();
 
@@ -43,6 +44,27 @@ const AudioTrackerPlayer = forwardRef(({hymn, onPlayingStateChange}, ref) => {
         } catch (error) {
             console.error('Failed to setup TrackPlayer for hymn:', error);
             throw error;
+        }
+    };
+
+    // Handle seeking to specific time
+    const handleSeek = async (seekTime) => {
+        try {
+            if (!isPlayerReady || progress.duration === 0) {
+                return;
+            }
+
+            setIsSeeking(true);
+            await TrackPlayer.seekTo(seekTime);
+
+            // Add a small delay to prevent UI jumping
+            setTimeout(() => {
+                setIsSeeking(false);
+            }, 100);
+        } catch (error) {
+            console.error('Error seeking:', error);
+            Alert.alert('Error', 'Failed to seek: ' + error.message);
+            setIsSeeking(false);
         }
     };
 
@@ -91,7 +113,8 @@ const AudioTrackerPlayer = forwardRef(({hymn, onPlayingStateChange}, ref) => {
                 console.error('Error in handleStop:', error);
                 Alert.alert('Error', 'Failed to stop playback: ' + error.message);
             }
-        }
+        },
+        handleSeek: handleSeek, // Expose seek method
     }));
 
     // Handle remote control events
@@ -152,6 +175,8 @@ const AudioTrackerPlayer = forwardRef(({hymn, onPlayingStateChange}, ref) => {
             <ProgressBar
                 progress={progress}
                 progressPercentage={progressPercentage}
+                onSeek={handleSeek}
+                disabled={!isPlayerReady || isSeeking}
             />
         </View>
     );

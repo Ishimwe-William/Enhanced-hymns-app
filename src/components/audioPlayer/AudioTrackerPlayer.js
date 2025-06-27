@@ -22,7 +22,7 @@ const AudioTrackerPlayer = forwardRef(({hymn, onPlayingStateChange}, ref) => {
     const track = {
         id: hymn?.firebaseId || hymn?.number || 'default-hymn',
         url: hymn?.audioUrl,
-        title: hymn?.title || 'Unknown Hymn',
+        title: `${hymn.number} - ${hymn?.title}` || 'Unknown Hymn',
         artist: '500 Indirimbo Zo Guhimbaza Imana',
         artwork: 'https://via.placeholder.com/300x300.png?text=Music',
         duration: 0,

@@ -10,6 +10,7 @@ import TrackPlayer, {
 import {setupTrackPlayer, isSetup} from '../../services/TrackPlayerService';
 import {ProgressBar} from "./ProgressBar";
 import {useHymns} from "../../context/HymnContext";
+import {useTheme} from "../../context/ThemeContext";
 
 const AudioTrackerPlayer = forwardRef(({hymn, onPlayingStateChange}, ref) => {
     const [isPlayerReady, setIsPlayerReady] = useState(false);
@@ -17,14 +18,15 @@ const AudioTrackerPlayer = forwardRef(({hymn, onPlayingStateChange}, ref) => {
     const {playing} = useIsPlaying();
     const progress = useProgress();
     const {isOffline} = useHymns();
+    const {colors} = useTheme().theme;
 
     // Create track object from hymn prop
     const track = {
         id: hymn?.firebaseId || hymn?.number || 'default-hymn',
         url: hymn?.audioUrl,
-        title: `${hymn.number} - ${hymn?.title}` || 'Unknown Hymn',
+        title: hymn?.title || 'Unknown Hymn',
         artist: '500 Indirimbo Zo Guhimbaza Imana',
-        artwork: 'https://via.placeholder.com/300x300.png?text=Music',
+        artwork: `https://placehold.co/300x300/${colors.track}/${colors.trackText}/png/?text=${hymn.number}`,
         duration: 0,
     };
 

@@ -12,6 +12,8 @@ export const themes = {
             textSecondary: '#666666',        // Darker gray for subtext,
             warning: "#fd9601",            // iOS red for warnings
             danger: "#FF3B30",            // iOS red for errors
+            track: "purple",
+            trackText: "white",
         },
     },
     dark: {
@@ -21,6 +23,8 @@ export const themes = {
             text: '#FFFFFF',
             primary: '#273c4b',
             header: '#FF9800',
+            track: "black",
+            trackText: "white",
             card: '#1C1C1E',
             border: '#3A3A3C',
             notification: '#0A84FF',

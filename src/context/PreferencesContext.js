@@ -29,6 +29,7 @@ const DEFAULT_PREFERENCES = {
     fontSize: 'medium', // small, medium, large
     theme: 'light', // light, dark
     offlineDownload: false,
+    offlineTunes: false,
     syncFavorites: true,
     notifications: {
         enabled: true,

@@ -76,7 +76,7 @@ export const HymnProvider = ({ children, dbInitialized }) => {
     clearUserData: () => clearUserData(user?.uid, setFavorites, setRecentHymns),
     clearRecentHymns: () => clearRecentHymns(user?.uid, setRecentHymns),
     clearFavorites: () => clearFavorites(user?.uid, setFavorites),
-    forceSync: () => forceSync(setHymns, setSyncing, isOffline),
+    forceSync: () => forceSync(setHymns, setSyncing, isOffline, null, preferences.offlineTunes),
     isLoggedIn: !!user?.uid,
   };
 

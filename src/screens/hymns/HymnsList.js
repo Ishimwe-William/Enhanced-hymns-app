@@ -10,6 +10,7 @@ import EmptyHymnList from "../../components/hymns/EmptyHymnList";
 import {Ionicons} from "@expo/vector-icons";
 import {useTheme} from "../../context/ThemeContext";
 import MyAlert from "../../components/ui/MyAlert";
+import {useFilteredHymns} from "../../hooks/useFilteredHymns";
 
 const HymnsList = () => {
     const navigation = useNavigation();
@@ -33,10 +34,7 @@ const HymnsList = () => {
         }
     };
 
-    const filteredHymns = hymns.filter(hymn =>
-        hymn.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        hymn.number.toString().includes(searchQuery)
-    );
+    const filteredHymns = useFilteredHymns(hymns, searchQuery);
 
     const handleMenuPress = () => {
         navigation.dispatch(DrawerActions.openDrawer());

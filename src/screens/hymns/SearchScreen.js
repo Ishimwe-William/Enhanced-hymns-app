@@ -1,24 +1,19 @@
-import React, { useState } from 'react';
-import { View, StyleSheet } from 'react-native';
-import { useNavigation, DrawerActions } from '@react-navigation/native';
+import React, {useState} from 'react';
+import {View, StyleSheet} from 'react-native';
+import {useNavigation, DrawerActions} from '@react-navigation/native';
 import Header from '../../components/ui/Header';
 import SearchBar from '../../components/ui/SearchBar';
 import HymnListView from '../../components/hymns/list/HymnListView';
 import EmptyState from '../../components/EmptyState';
-import { useHymns } from '../../context/HymnContext';
+import {useHymns} from '../../context/HymnContext';
+import {useFilteredHymns} from "../../hooks/useFilteredHymns";
 
 const SearchScreen = () => {
     const navigation = useNavigation();
-    const { hymns } = useHymns();
+    const {hymns} = useHymns();
     const [searchQuery, setSearchQuery] = useState('');
 
-    const filteredHymns = searchQuery.trim()
-        ? hymns.filter(hymn =>
-            hymn.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            hymn.number.toString().includes(searchQuery.toLowerCase()) ||
-            (hymn.origin && hymn.origin.toLowerCase().includes(searchQuery.toLowerCase()))
-        )
-        : [];
+    const filteredHymns = useFilteredHymns(hymns, searchQuery);
 
     const handleMenuPress = () => {
         navigation.dispatch(DrawerActions.openDrawer());
@@ -27,13 +22,13 @@ const SearchScreen = () => {
     const handleHymnSelect = (hymnId) => {
         navigation.navigate('HymnsStack', {
             screen: 'HymnDetail',
-            params: { hymnId }
+            params: {hymnId}
         });
     };
 
     return (
         <View style={styles.container}>
-            <Header title="Search" showMenu onMenu={handleMenuPress}showMore={false} />
+            <Header title="Search" showMenu onMenu={handleMenuPress} showMore={false}/>
             <SearchBar
                 value={searchQuery}
                 onChangeText={setSearchQuery}
@@ -53,7 +48,7 @@ const SearchScreen = () => {
                     message={`No hymns found for "${searchQuery}"`}
                 />
             ) : (
-                <HymnListView hymns={filteredHymns} onHymnSelect={handleHymnSelect} />
+                <HymnListView hymns={filteredHymns} onHymnSelect={handleHymnSelect}/>
             )}
         </View>
     );

@@ -3,42 +3,55 @@ import { TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import {useTheme} from "../../context/ThemeContext";
 
-const FloatingButton = ({ name, size = 28, color = '#666', onPress, style }) => {
+const FloatingButton = ({
+                            name,
+                            size = 24,
+                            color = '#666',
+                            onPress,
+                            style,
+                            compact = false, // New prop for extra compact mode
+                            disabled = false
+                        }) => {
     const {colors} = useTheme().theme;
+
+    // Dynamic sizing based on compact prop
+    const buttonSize = compact ? 30 : 38; // Smaller when compact
+    const borderRadius = buttonSize / 2;
 
     const styles = StyleSheet.create({
         button: {
             alignItems: 'center',
             justifyContent: 'center',
-            width: 46,
-            height: 46,
-            borderRadius: 23,
-            backgroundColor: colors.primary,
+            width: buttonSize,
+            height: buttonSize,
+            borderRadius: borderRadius,
+            backgroundColor: disabled ? colors.surface : colors.primary,
             shadowColor: '#000',
             shadowOffset: {
                 width: 0,
-                height: 1,
+                height: disabled ? 0 : 1,
             },
-            shadowOpacity: 0.1,
-            shadowRadius: 2,
-            elevation: 2,
+            shadowOpacity: disabled ? 0 : 0.1,
+            shadowRadius: disabled ? 0 : 2,
+            elevation: disabled ? 0 : 2,
+            opacity: disabled ? 0.5 : 1,
         },
     });
 
     return (
         <TouchableOpacity
             style={[styles.button, style]}
-            onPress={onPress}
-            activeOpacity={0.7}
+            onPress={disabled ? null : onPress}
+            activeOpacity={disabled ? 1 : 0.7}
+            disabled={disabled}
         >
             <Ionicons
                 name={name}
                 size={size}
-                color={color}
+                color={disabled ? colors.textSecondary : color}
             />
         </TouchableOpacity>
     );
 };
-
 
 export default FloatingButton;

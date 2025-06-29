@@ -12,6 +12,7 @@ import {ProgressBar} from "./ProgressBar";
 import {useHymns} from "../../context/HymnContext";
 import {useTheme} from "../../context/ThemeContext";
 import * as FileSystem from 'expo-file-system';
+import Constants from "expo-constants";
 
 const AudioTrackerPlayer = forwardRef(({hymn, onPlayingStateChange}, ref) => {
     const [isPlayerReady, setIsPlayerReady] = useState(false);
@@ -21,7 +22,7 @@ const AudioTrackerPlayer = forwardRef(({hymn, onPlayingStateChange}, ref) => {
     const {playing} = useIsPlaying();
     const progress = useProgress();
     const {isOffline} = useHymns();
-    const {colors} = useTheme().theme;
+    const {artwork} = useTheme().theme;
 
     const determineAudioSource = async () => {
         if (!hymn) {
@@ -76,15 +77,15 @@ const AudioTrackerPlayer = forwardRef(({hymn, onPlayingStateChange}, ref) => {
         return {
             id: hymn?.firebaseId || hymn?.number || 'default-hymn',
             url: audioSource,
-            title: hymn?.title || 'Unknown Hymn',
-            artist: '500 Indirimbo Zo Guhimbaza Imana',
-            artwork: `https://placehold.co/300x300/${colors.track}/${colors.trackText}/png/?text=${hymn.number}`,
+            title: `${hymn.number} - ${hymn?.title}` || 'Unknown Hymn',
+            artist:Constants.expoConfig.extra.EXPO_PUBLIC_APP_NAME,
+            artwork: artwork ,
             duration: 0,
         };
     };
 
 
-    // Setup TrackPlayer service
+// Setup TrackPlayer service
     const setupPlayerForHymn = async () => {
         try {
             // Ensure TrackPlayer is setup first
@@ -94,14 +95,40 @@ const AudioTrackerPlayer = forwardRef(({hymn, onPlayingStateChange}, ref) => {
 
             // Clear existing queue and add new track
             await TrackPlayer.reset();
-            if (createTrack.url) {
-                await TrackPlayer.add(createTrack);
+
+            // Fix: Call createTrack() to get the actual track object
+            const track = createTrack();
+            if (track && track.url) {
+                await TrackPlayer.add(track);
             }
         } catch (error) {
             console.error('Failed to setup TrackPlayer for hymn:', error);
             throw error;
         }
     };
+
+// Also fix the remote control event handler:
+    useTrackPlayerEvents([Event.RemotePlay, Event.RemotePause, Event.RemoteStop], async (event) => {
+        try {
+            if (event.type === Event.RemotePlay) {
+                await TrackPlayer.play();
+            } else if (event.type === Event.RemotePause) {
+                await TrackPlayer.pause();
+            } else if (event.type === Event.RemoteStop) {
+                await TrackPlayer.stop();
+                await TrackPlayer.reset();
+
+                // Fix: Call createTrack() to get the actual track object
+                const track = createTrack();
+                if (track && track.url) {
+                    await TrackPlayer.add(track);
+                }
+                console.log('Notification stop triggered and track re-added');
+            }
+        } catch (error) {
+            console.error('Error handling remote event:', error);
+        }
+    });
 
     // Handle seeking to specific time
     const handleSeek = async (seekTime) => {
@@ -181,26 +208,6 @@ const AudioTrackerPlayer = forwardRef(({hymn, onPlayingStateChange}, ref) => {
         isAudioAvailable: () => audioAvailable,
         getAudioSource: () => audioSource,
     }));
-
-    // Handle remote control events
-    useTrackPlayerEvents([Event.RemotePlay, Event.RemotePause, Event.RemoteStop], async (event) => {
-        try {
-            if (event.type === Event.RemotePlay) {
-                await TrackPlayer.play();
-            } else if (event.type === Event.RemotePause) {
-                await TrackPlayer.pause();
-            } else if (event.type === Event.RemoteStop) {
-                await TrackPlayer.stop();
-                await TrackPlayer.reset();
-                if (createTrack.url) {
-                    await TrackPlayer.add(createTrack);
-                }
-                console.log('Notification stop triggered and track re-added');
-            }
-        } catch (error) {
-            console.error('Error handling remote event:', error);
-        }
-    });
 
     // Notify parent component of playing state changes
     useEffect(() => {

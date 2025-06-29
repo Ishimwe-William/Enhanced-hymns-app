@@ -11,6 +11,7 @@ export const setupTrackPlayer = async () => {
         await TrackPlayer.setupPlayer();
 
         await TrackPlayer.updateOptions({
+            icon: require('./../../assets/adaptive-icon.png'),
             android: {
                 appKilledPlaybackBehavior: AppKilledPlaybackBehavior.StopPlaybackAndRemoveNotification,
             },

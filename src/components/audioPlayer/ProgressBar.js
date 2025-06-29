@@ -44,7 +44,7 @@ export const ProgressBar = ({progress, progressPercentage, onSeek}) => {
             // Add container styles if needed
         },
         progressBar: {
-            height: 32, // Increased height for better touch target
+            height: 20, // Increased height for better touch target
             backgroundColor: colors.card,
             position: 'relative',
             justifyContent: 'center',

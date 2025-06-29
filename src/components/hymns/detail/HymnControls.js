@@ -36,28 +36,27 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare, disabled}) => {
         },
         controlsGrid: {
             flexDirection: 'row',
-            flexWrap: 'wrap',
             justifyContent: 'space-around',
             alignItems: 'center',
-            paddingHorizontal: 20,
-            paddingVertical: 16,
-            height: 80,
+            paddingHorizontal: 16,
+            paddingVertical: 12, // Increased slightly for better proportion with bigger buttons
         },
         bottomRow: {
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-between',
-            paddingHorizontal: 8,
-            paddingVertical: 6,
-            minHeight: 50,
+            paddingHorizontal: 6, // Reduced from 8
+            paddingVertical: 4, // Reduced from 6
+            minHeight: 40, // Reduced from 50
         },
         alwaysVisibleContainer: {
             flexDirection: 'row',
             justifyContent: 'center',
             flex: 1,
+            gap: 6, // Reduced spacing between buttons
         },
         playButtonContainer: {
-            marginHorizontal: 1,
+            marginHorizontal: 5, // Removed margin
             alignItems: 'center',
             justifyContent: 'center',
             shadowColor: '#000',
@@ -69,24 +68,26 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare, disabled}) => {
             shadowRadius: 2,
             elevation: 2,
             borderWidth: 1,
-            borderRadius: 23,
+            borderRadius: 24, // Reduced to match compact button size (28/2)
             borderColor: colors.textSecondary,
+            width: 38, // Match compact button size
+            height: 38, // Match compact button size
         },
         audioPlayerContainer: {
             overflow: 'hidden',
-            borderRadius: 8,
-            marginRight: 8,
+            borderRadius: 6, // Reduced from 8
+            marginRight: 4, // Reduced from 8
         },
         progressContainer: {
             position: 'absolute',
             top: 0,
             left: 0,
             right: 0,
-            paddingHorizontal: 16,
-            paddingTop: 8,
+            paddingHorizontal: 12, // Reduced from 16
+            paddingTop: 4, // Reduced from 8
             backgroundColor: colors.primary,
-            borderTopLeftRadius: 8,
-            borderTopRightRadius: 8,
+            borderTopLeftRadius: 6,
+            borderTopRightRadius: 6,
         },
         chevronContainer: {
             alignItems: 'center',
@@ -96,13 +97,6 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare, disabled}) => {
 
     const isHymnFavorite = isFavorite(hymn?.id);
 
-    // Effect to auto-expand when playing starts
-    useEffect(() => {
-        if (isPlaying && !isExpanded) {
-            toggleExpand();
-        }
-    }, [isPlaying]);
-
     const toggleExpand = () => {
         if (disabled) return;
 
@@ -111,12 +105,12 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare, disabled}) => {
         Animated.parallel([
             Animated.timing(animatedHeight, {
                 toValue: toValue,
-                duration: 300,
+                duration: 250, // Faster animation
                 useNativeDriver: false,
             }),
             Animated.timing(rotateAnim, {
                 toValue: toValue,
-                duration: 300,
+                duration: 250,
                 useNativeDriver: true,
             }),
         ]).start();
@@ -134,7 +128,7 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare, disabled}) => {
 
         Animated.timing(audioPlayerWidth, {
             toValue: toValue,
-            duration: 300,
+            duration: 250, // Faster animation
             useNativeDriver: false,
         }).start();
 
@@ -190,46 +184,46 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare, disabled}) => {
     // Interpolate animations
     const expandedHeight = animatedHeight.interpolate({
         inputRange: [0, 1],
-        outputRange: [0, 80], // Height of the expanded controls
+        outputRange: [0, 60], // Increased from 60 to accommodate bigger buttons with better spacing
     });
 
     const playerWidth = audioPlayerWidth.interpolate({
         inputRange: [0, 1],
-        outputRange: ['0%', '50%'], // Reduced width to fit better
+        outputRange: ['0%', '45%'], // Reduced from 50%
     });
 
     const controlButtons = [
         {
             name: 'chevron-back-outline',
-            size: 28,
+            size: 24, // Increased from 20 to 24
             color: disabled ? colors.textSecondary : colors.text,
             onPress: disabled ? null : onPrevious,
             label: 'Previous',
         },
         {
             name: 'text-outline',
-            size: 28,
+            size: 24,
             color: disabled ? colors.textSecondary : colors.text,
             onPress: disabled ? null : handleFont,
             label: 'Font',
         },
         {
             name: isHymnFavorite ? 'heart' : 'heart-outline',
-            size: 28,
+            size: 24,
             color: disabled ? colors.textSecondary : (isHymnFavorite ? colors.danger : colors.text),
             onPress: disabled ? null : handleFavorite,
             label: 'Favorite',
         },
         {
             name: 'share-social-outline',
-            size: 28,
+            size: 24,
             color: disabled ? colors.textSecondary : colors.text,
             onPress: disabled ? null : onShare,
             label: 'Share',
         },
         {
             name: 'chevron-forward-outline',
-            size: 28,
+            size: 24,
             color: disabled ? colors.textSecondary : colors.text,
             onPress: disabled ? null : onNext,
             label: 'Next',
@@ -251,6 +245,7 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare, disabled}) => {
                             color={button.color}
                             onPress={button.onPress}
                             disabled={disabled}
+                            compact={false} // Use regular size (32x32) for better proportion
                         />
                     ))}
                 </View>
@@ -269,7 +264,9 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare, disabled}) => {
                 </Animated.View>
 
                 {/* Always Visible Controls - on the right side */}
-                <View style={styles.alwaysVisibleContainer}>
+                <View
+                    style={styles.alwaysVisibleContainer}
+                >
                     {hymn?.audioUrl && (
                         <>
                             <View style={[
@@ -278,10 +275,11 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare, disabled}) => {
                             ]}>
                                 <FloatingButton
                                     name={showAudioPlayer && isPlaying ? "pause" : "play"}
-                                    size={28}
+                                    size={24} // Even smaller for bottom controls
                                     color={hymn?.audioUrl ? colors.notification : colors.textSecondary}
                                     onPress={handlePlay}
                                     disabled={disabled}
+                                    // compact={true}
                                 />
                             </View>
                             <View style={[
@@ -290,10 +288,11 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare, disabled}) => {
                             ]}>
                                 <FloatingButton
                                     name={"stop"}
-                                    size={28}
+                                    size={24}
                                     color={colors.danger}
                                     onPress={handleStop}
                                     disabled={disabled}
+                                    // compact={true}
                                 />
                             </View>
                         </>
@@ -303,11 +302,12 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare, disabled}) => {
                         disabled && {opacity: 0.5}
                     ]}>
                         <FloatingButton
-                            name={isExpanded ? "chevron-up" : "chevron-down"}
+                            name={!isExpanded ? "chevron-up" : "chevron-down"}
                             size={24}
                             color={colors.text}
                             onPress={toggleExpand}
                             disabled={disabled}
+                            // compact={true}
                         />
                     </View>
                 </View>

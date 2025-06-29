@@ -1,11 +1,12 @@
 export const themes = {
     light: {
         mode: 'light',
+        artwork: require('../../../assets/artwork-light.png'),
         colors: {
             background: '#F0F8FF',           // Soft light gray, like iOS light background
             text: '#333333',                 // Primary dark text
-            primary: '#E0E0E0',              // Light neutral, matches dark.primary tone
-            header: '#0076fe',              // Same across both themes
+            primary: '#E1F3EF',              // Light neutral, matches dark.primary tone
+            header: '#00AD95',              // Same across both themes
             card: '#FFFFFF',                 // Pure white cards
             border: '#D1D1D6',               // Softer border color
             notification: '#007AFF',         // iOS blue
@@ -18,10 +19,11 @@ export const themes = {
     },
     dark: {
         mode: 'dark',
+        artwork: require('../../../assets/artwork-dark.png'),
         colors: {
             background: '#000000',
             text: '#FFFFFF',
-            primary: '#273c4b',
+            primary: '#1F2F3E',
             header: '#FF9800',
             track: "black",
             trackText: "white",

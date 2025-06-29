@@ -6,7 +6,7 @@ export default ({ config }) => {
         name: "Indirimbo Zo Guhimbaza Imana",
         slug: "hymns-app",
         description: "An app for accessing and singing hymns in Kinyarwanda.",
-        version: "1.1.2",
+        version: process.env.EXPO_PUBLIC_APP_VERSION,
         backgroundColor: "#ffffff",
         userInterfaceStyle: "automatic",
         icon: "./assets/icon.png",
@@ -31,7 +31,7 @@ export default ({ config }) => {
                 foregroundImage: "./assets/adaptive-icon.png",
                 backgroundColor: "#ffffff",
             },
-            versionCode: 11,
+            versionCode: process.env.EXPO_PUBLIC_ANDROID_VERSION_CODE,
         },
         ios: {
             supportsTablet: true,
@@ -58,6 +58,11 @@ export default ({ config }) => {
             EXPO_PUBLIC_FEEDBACK_EMAIL: process.env.EXPO_PUBLIC_FEEDBACK_EMAIL,
             EXPO_PUBLIC_PACKAGE_NAME: process.env.EXPO_PUBLIC_PACKAGE_NAME,
             EXPO_PUBLIC_GOOGLE_PLAY_ID: process.env.EXPO_PUBLIC_GOOGLE_PLAY_ID,
+
+            EXPO_PUBLIC_APP_NAME: process.env.EXPO_PUBLIC_APP_NAME,
+            EXPO_PUBLIC_APP_VERSION: process.env.EXPO_PUBLIC_APP_VERSION,
+            EXPO_PUBLIC_APP_DEV: process.env.EXPO_PUBLIC_APP_DEV,
+            EXPO_PUBLIC_ANDROID_VERSION_CODE: process.env.EXPO_PUBLIC_ANDROID_VERSION_CODE,
         },
         plugins: ["expo-secure-store", "expo-sqlite"],
     };

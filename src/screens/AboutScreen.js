@@ -73,20 +73,20 @@ const AboutScreen = () => {
                         easy access to sacred music for worship, personal devotion, and community singing.
                     </Text>
                 </Paragraph>
-                <Paragraph title={"Features"}>
-                    <Feature icon={"book-music"} title={"Hymn Collection"}>
-                        <Text>Browse hundreds of hymns</Text>
-                    </Feature>
-                    <Feature icon={"magnify"} title={"Search Functionality"}>
-                        <Text>Easily find hymns by title, number, or lyrics</Text>
-                    </Feature>
-                    <Feature icon={"cards-heart"} title={"Favorites"}>
-                        <Text>Save your favorite hymns for quick access</Text>
-                    </Feature>
-                    <Feature icon={"wifi-off"} title={"Offline Access"}>
-                        <Text>Use the app without requiring an internet connection</Text>
-                    </Feature>
-                </Paragraph>
+
+                <Paragraph title={"Features"} style={{marginBottom: -15}}/>
+                <Feature icon={"book-music"} title={"Hymn Collection"}>
+                    <Text>Browse hundreds of hymns</Text>
+                </Feature>
+                <Feature icon={"magnify"} title={"Search Functionality"}>
+                    <Text>Easily find hymns by title, number, or lyrics</Text>
+                </Feature>
+                <Feature icon={"cards-heart"} title={"Favorites"}>
+                    <Text>Save your favorite hymns for quick access</Text>
+                </Feature>
+                <Feature icon={"wifi-off"} title={"Offline Access"}>
+                    <Text>Use the app without requiring an internet connection</Text>
+                </Feature>
 
                 <Paragraph title={"Project Background"}>
                     <Text>
@@ -96,7 +96,7 @@ const AboutScreen = () => {
                         these hymns easily accessible in digital format.
                     </Text>
                 </Paragraph>
-                <Paragraph title={"Connect & Contact"}/>
+                <Paragraph title={"Connect & Contact"} style={{marginBottom: -15}}/>
                 <View style={styles.connect}>
                     <ConnectIcon name={"Github"} icon={"github"}
                                  onPress={() => openLink('https://github.com/Ishimwe-William')}

@@ -275,11 +275,10 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare, disabled}) => {
                             ]}>
                                 <FloatingButton
                                     name={showAudioPlayer && isPlaying ? "pause" : "play"}
-                                    size={24} // Even smaller for bottom controls
-                                    color={hymn?.audioUrl ? colors.notification : colors.textSecondary}
+                                    size={24}
+                                    color={hymn?.audioUrl ? colors.header : colors.textSecondary}
                                     onPress={handlePlay}
                                     disabled={disabled}
-                                    // compact={true}
                                 />
                             </View>
                             <View style={[
@@ -292,7 +291,6 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare, disabled}) => {
                                     color={colors.danger}
                                     onPress={handleStop}
                                     disabled={disabled}
-                                    // compact={true}
                                 />
                             </View>
                         </>

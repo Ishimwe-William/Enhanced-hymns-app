@@ -1,7 +1,7 @@
 import {View, Text, StyleSheet} from 'react-native';
 import {useTheme} from "../../context/ThemeContext";
 
-export const Paragraph = ({title, children}) => {
+export const Paragraph = ({title, style, children}) => {
     const {colors} = useTheme().theme;
 
     const styles = StyleSheet.create({
@@ -24,7 +24,7 @@ export const Paragraph = ({title, children}) => {
     });
 
     return (
-        <View style={styles.card}>
+        <View style={[styles.card, style]}>
             <Text style={styles.titleStyle}>{title}</Text>
             <Text style={styles.descriptionStyle}>
                 {children}

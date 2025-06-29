@@ -7,12 +7,12 @@ export const Feature = ({title, icon, children}) => {
 
     const styles = StyleSheet.create({
         featureContainer: {
-            width: '100%',
+            width: '95%',
             flexDirection: 'row',
             alignItems: 'center',
             borderBottomWidth: 1,
             borderBottomColor: colors.border,
-            marginVertical: 10,
+            marginBottom: 10,
         },
         icon: {
             marginRight: 12,
@@ -22,6 +22,9 @@ export const Feature = ({title, icon, children}) => {
             fontSize: 18,
             lineHeight: 24,
             fontWeight: 'bold',
+        },
+        descriptionContainer: {
+            width: "94%"
         },
         description: {
             color: colors.textSecondary,
@@ -33,7 +36,7 @@ export const Feature = ({title, icon, children}) => {
     return (
         <View style={styles.featureContainer}>
             <MaterialCommunityIcons name={icon} size={24} color={colors.header} style={styles.icon}/>
-            <View>
+            <View style={styles.descriptionContainer}>
                 <Text style={styles.title}>{title}</Text>
                 <Text style={styles.description}>{children}</Text>
             </View>

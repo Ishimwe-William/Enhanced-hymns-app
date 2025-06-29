@@ -42,7 +42,7 @@ export const AppLogoHeader = () => {
                 {MyConstants.AppName}
             </Text>
             <Text style={styles.versionText}>
-                {MyConstants.AppVersion}
+                v{MyConstants.AppVersion}
             </Text>
         </View>
     );

@@ -3,6 +3,7 @@
 import { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
 import { Share, Alert } from 'react-native';
+import Constants from "expo-constants";
 
 /**
  * Capture the given viewRef as a PNG, then open the native share dialog.
@@ -55,14 +56,27 @@ export async function shareHymnAsImage(viewRef, hymn) {
  */
 export async function shareHymnAsText(hymn) {
     try {
-        // Build a text block including verse numbers
-        const versesText = hymn.verses
-            ? hymn.verses.map((verse, idx) => `${idx + 1}. ${verse}`).join('\n\n')
+        // Sort stanzas by stanzaNumber to ensure correct order
+        const sortedStanzas = hymn.stanzas
+            ? Object.values(hymn.stanzas).sort((a, b) => a.stanzaNumber - b.stanzaNumber)
+            : [];
+
+        // Sort refrains by refrainNumber if multiple exist
+        const sortedRefrains = hymn.refrains
+            ? Object.values(hymn.refrains).sort((a, b) => a.refrainNumber - b.refrainNumber)
+            : [];
+
+        let versesText = sortedStanzas.length > 0
+            ? sortedStanzas.map(stanza => `${stanza.stanzaNumber}. ${stanza.text}`).join('\n\n')
             : 'Check out this beautiful hymn!';
+
+        if (sortedRefrains.length > 0) {
+            versesText += `\n\nChorus:\n${sortedRefrains[0].text}`;
+        }
 
         const shareContent = {
             title: `${hymn.title} - Hymn ${hymn.number}`,
-            message: `🎵 ${hymn.title} (Hymn ${hymn.number})\n\n${versesText}\n\nShared from Hymns App`,
+            message: `🎵 ${hymn.title} (Hymn ${hymn.number})\n\n${versesText}\n\nShared from ${Constants.expoConfig.extra.EXPO_PUBLIC_APP_NAME}`,
         };
 
         await Share.share(shareContent);

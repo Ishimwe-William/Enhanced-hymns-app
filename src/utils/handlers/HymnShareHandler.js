@@ -1,7 +1,8 @@
-import { Linking } from 'react-native';
+import {Linking} from 'react-native';
 import MyAlert from '../../components/ui/MyAlert';
-import { shareHymnAsImage, shareHymnAsText } from '../hymns/shareHymn';
+import {shareHymnAsImage, shareHymnAsText} from '../hymns/shareHymn';
 import Constants from 'expo-constants';
+import * as Clipboard from 'expo-clipboard';
 
 export class HymnShareHandler {
     constructor(hymn, viewShotRef, setIsCapturing) {
@@ -21,9 +22,9 @@ export class HymnShareHandler {
             'Share Hymn',
             'How would you like to share this hymn?',
             [
-                { text: 'Cancel', style: 'cancel' },
-                { text: 'Share as Image', onPress: this.beginImageShare },
-                { text: 'Share as Text', onPress: this.beginTextShare },
+                {text: 'Cancel', style: 'cancel'},
+                {text: 'Share as Image', onPress: this.beginImageShare},
+                {text: 'Share as Text', onPress: this.beginTextShare},
             ]
         );
     };
@@ -59,25 +60,91 @@ export class HymnShareHandler {
             'Send Feedback',
             'How would you like to send your feedback?',
             [
-                { text: 'Cancel', style: 'cancel' },
-                { text: 'Email', onPress: this.handleEmailFeedback },
-                { text: 'In-App Form', onPress: this.handleInAppFeedback },
+                {text: 'Cancel', style: 'cancel'},
+                {text: 'Email', onPress: this.handleEmailFeedback},
+                {text: 'In-App Form', onPress: this.handleInAppFeedback},
             ]
         );
     };
 
     handleEmailFeedback = () => {
         const subject = `Feedback for Hymn ${this.hymn.number} - ${this.hymn.title}`;
-        const body = `I would like to provide feedback about Hymn ${this.hymn.number} - "${this.hymn.title}":\n\n`;
+        const body = this.generateFeedbackEmailBody();
 
         const mailtoUrl = `mailto:${this.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 
-        Linking.openURL(mailtoUrl).catch(() => {
-            MyAlert.info(`Please send your feedback to: ${this.email}`);
-        });
-    };
+        Linking.canOpenURL(mailtoUrl)
+            .then((supported) => {
+                if (supported) {
+                    return Linking.openURL(mailtoUrl);
+                } else {
+                    throw new Error('Email client not available');
+                }
+            })
+            .catch((error) => {
+                console.error('Email feedback failed:', error);
+                MyAlert.show(
+                    'Email Not Available',
+                    `Please send your feedback manually to: ${this.email}`,
+                    [
+                        {text: 'OK', style: 'default'},
+                        {
+                            text: 'Copy Email',
+                            onPress: () => this.copyEmailToClipboard()
+                        }
+                    ]
+                );
+            });
+    }
 
-    handleInAppFeedback = () => {
-        MyAlert.info(`Please send your feedback to: ${this.email}`);
-    };
+    /**
+     * Shows in-app feedback information
+     */
+    handleInAppFeedback() {
+        MyAlert.show(
+            'Send Feedback',
+            `Please send your feedback to: ${this.email}`,
+            [
+                {text: 'OK', style: 'default'},
+                {
+                    text: 'Copy Email',
+                    onPress: () => this.copyEmailToClipboard()
+                }
+            ]
+        );
+    }
+
+    /**
+     * Generates email body template for feedback
+     * @returns {string} formatted email body
+     */
+    generateFeedbackEmailBody() {
+        const hymnInfo = `Hymn ${this.hymn.number} - "${this.hymn.title}"`;
+
+        return `I would like to provide feedback about ${hymnInfo}:
+            Feedback Type: [Bug Report / Feature Request / General Feedback]
+            
+            Description:
+            [Please describe your feedback here]
+            
+            Additional Information:
+            - Hymn Number: ${this.hymn.number}
+            - Hymn Title: ${this.hymn.title}
+            - App Version: ${Constants.expoConfig.extra?.EXPO_PUBLIC_APP_VERSION || 'Unknown'}
+            
+            Thank you for your time!`;
+    }
+
+    /**
+     * Copies email address to clipboard
+     */
+    async copyEmailToClipboard() {
+        try {
+            await Clipboard.setStringAsync(this.email);
+            MyAlert.success('Email address copied to clipboard!');
+        } catch (error) {
+            console.error('Failed to copy email:', error);
+            MyAlert.error('Failed to copy email address.');
+        }
+    }
 }

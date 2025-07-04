@@ -1,8 +1,11 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { MyConstants } from '../../../utils/constants';
+import {View, Text, StyleSheet} from 'react-native';
+import {MyConstants} from '../../../utils/constants';
+import {useTheme} from "../../../context/ThemeContext";
 
-export const HymnShareCapture = React.forwardRef(({ hymn }, ref) => {
+export const HymnShareCapture = React.forwardRef(({hymn}, ref) => {
+    const {colors} = useTheme().theme;
+    console.log(hymn.title, ref)
     const styles = StyleSheet.create({
         captureOverlay: {
             position: 'absolute',
@@ -16,11 +19,11 @@ export const HymnShareCapture = React.forwardRef(({ hymn }, ref) => {
         },
         shareableContent: {
             width: '90%',
-            backgroundColor: '#FFFFFF',
-            padding: 20,
+            backgroundColor: colors.card,
+            padding: 16,
             borderRadius: 8,
             shadowColor: '#000',
-            shadowOffset: { width: 0, height: 2 },
+            shadowOffset: {width: 0, height: 2},
             shadowOpacity: 0.1,
             shadowRadius: 4,
             elevation: 5,
@@ -29,12 +32,12 @@ export const HymnShareCapture = React.forwardRef(({ hymn }, ref) => {
             alignItems: 'center',
             marginBottom: 16,
             borderBottomWidth: 1,
-            borderBottomColor: '#E0E0E0',
+            borderBottomColor: colors.border,
             paddingBottom: 12,
         },
         hymnNumber: {
             fontSize: 16,
-            color: '#666',
+            color: colors.text,
             fontWeight: '500',
         },
         appBranding: {
@@ -42,12 +45,18 @@ export const HymnShareCapture = React.forwardRef(({ hymn }, ref) => {
             marginTop: 20,
             paddingTop: 12,
             borderTopWidth: 1,
-            borderTopColor: '#E0E0E0',
+            borderTopColor: colors.border,
         },
         brandingText: {
             fontSize: 12,
-            color: '#999',
+            color: colors.textSecondary,
             fontStyle: 'italic',
+        },
+        stanzaRefrainText: {
+            fontSize: 14,
+            color: colors.text,
+            textAlign: 'center',
+            marginVertical: 4,
         },
     });
 
@@ -65,14 +74,14 @@ export const HymnShareCapture = React.forwardRef(({ hymn }, ref) => {
                     .sort((a, b) => a.stanzaNumber - b.stanzaNumber)
                     .map((stanza, index) => (
                         <View key={index}>
-                            <Text style={{textAlign: "center"}}>{stanza.stanzaNumber}.</Text>
-                            <Text style={{textAlign: "center"}}>{stanza.text}</Text>
+                            <Text style={styles.stanzaRefrainText}>{stanza.stanzaNumber}.</Text>
+                            <Text style={styles.stanzaRefrainText}>{stanza.text}</Text>
                         </View>
                     ))}
                 {hymn.refrains && Object.values(hymn.refrains).length > 0 && (
                     <View>
-                        <Text style={{textAlign: "center"}}>Chorus:</Text>
-                        <Text style={{textAlign: "center"}}>
+                        <Text style={styles.stanzaRefrainText}>Chorus:</Text>
+                        <Text style={styles.stanzaRefrainText}>
                             {Object.values(hymn.refrains).sort((a, b) => a.refrainNumber - b.refrainNumber)[0].text}
                         </Text>
                     </View>

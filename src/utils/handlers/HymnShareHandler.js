@@ -100,7 +100,7 @@ export class HymnShareHandler {
     /**
      * Shows in-app feedback information
      */
-    handleInAppFeedback() {
+    handleInAppFeedback = () => {
         MyAlert.show(
             'Send Feedback',
             `Please send your feedback to: ${this.email}`,
@@ -108,7 +108,7 @@ export class HymnShareHandler {
                 {text: 'OK', style: 'default'},
                 {
                     text: 'Copy Email',
-                    onPress: () => this.copyEmailToClipboard()
+                    onPress: this.copyEmailToClipboard
                 }
             ]
         );
@@ -118,7 +118,7 @@ export class HymnShareHandler {
      * Generates email body template for feedback
      * @returns {string} formatted email body
      */
-    generateFeedbackEmailBody() {
+    generateFeedbackEmailBody = () => {
         const hymnInfo = `Hymn ${this.hymn.number} - "${this.hymn.title}"`;
 
         return `I would like to provide feedback about ${hymnInfo}:
@@ -138,7 +138,7 @@ export class HymnShareHandler {
     /**
      * Copies email address to clipboard
      */
-    async copyEmailToClipboard() {
+    copyEmailToClipboard = async () => {
         try {
             await Clipboard.setStringAsync(this.email);
             MyAlert.success('Email address copied to clipboard!');

@@ -3,7 +3,7 @@ import 'dotenv/config';
 export default ({ config }) => {
     return {
         ...config,
-        name: "Indirimbo Zo Guhimbaza Imana",
+        name: "500 Indirimbo Zo Guhimbaza Imana",
         slug: "hymns-app",
         description: "An app for accessing and singing hymns in Kinyarwanda.",
         version: process.env.EXPO_PUBLIC_APP_VERSION,

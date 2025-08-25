@@ -37,7 +37,7 @@ export const HymnProvider = ({ children, dbInitialized }) => {
   const [syncing, setSyncing] = useState(false);
   const { user, authInitialized } = useUser();
   const { preferences } = usePreferences();
-  const { isOffline } = useNetwork();
+  const { isOffline, isOnWifi } = useNetwork();
 
   useEffect(() => {
     if (authInitialized && user?.uid) {
@@ -65,6 +65,7 @@ export const HymnProvider = ({ children, dbInitialized }) => {
     loading,
     syncing,
     isOffline,
+    isOnWifi,
     syncHymns: () => syncHymns(true, setSyncing, setHymns, preferences.offlineDownload, isOffline),
     loadHymns: () => loadHymns(setHymns, setLoading, isOffline, preferences.offlineDownload),
     loadHymnDetails: (hymnId) => loadHymnDetails(hymnId, isOffline, (hymn) => addToRecent(hymn, recentHymns, setRecentHymns, user?.uid, preferences.syncFavorites, isOffline)),

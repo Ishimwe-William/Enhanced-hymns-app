@@ -17,6 +17,7 @@ const OfflineStorageSettings = ({
                                     settingsLoading,
                                     downloadingHymns,
                                     isOffline,
+                                    isOnWifi,
                                     localHymnCount,
                                     onDownloadAllHymns,
                                     onUpdateOfflineHymns,
@@ -67,8 +68,8 @@ const OfflineStorageSettings = ({
     const handleOfflineTunesToggle = async (value) => {
         try {
             if (value) {
-                if (isOffline) {
-                    Alert.error('Please connect to the internet to download tunes.');
+                if (isOffline || !isOnWifi) {
+                    Alert.error('Please connect to the Wi-Fi internet to download tunes.');
                     return;
                 }
 
@@ -88,7 +89,7 @@ const OfflineStorageSettings = ({
 
                 Alert.confirm(
                     'Download Tunes',
-                    `This will download ${tunesInfo.remaining} audio tunes for offline playback. This may take some time and use significant data. Continue?`,
+                    `This will download ${tunesInfo.remaining} audio tunes for offline playback. This may take some time and use significant data. Better on Wi-Fi Network. Continue?`,
                     async () => {
                         setDownloadingTunes(true);
                         try {
@@ -142,7 +143,7 @@ const OfflineStorageSettings = ({
     const handleOfflineDownloadToggle = async (value) => {
         try {
             if (value) {
-                if (isOffline) {
+                if (isOffline || !isOnWifi) {
                     Alert.error('Please connect to the internet to enable offline download and download hymns.');
                     return;
                 }
@@ -192,14 +193,14 @@ const OfflineStorageSettings = ({
 
     const handleManualDownload = async () => {
         if (isOffline) {
-            Alert.error('Please connect to the internet to download hymns.');
+            Alert.error('Please connect to the Wi-Fi internet to download hymns.');
             return;
         }
 
         if (localHymnCount > 0 && preferences.offlineDownload) {
             Alert.confirm(
-                'Update Offline Hymns',
-                `This will update your ${localHymnCount} offline hymns with the latest versions. Continue?`,
+                'Update Offline Hymns Lyrics',
+                `This will update your ${localHymnCount} offline hymns lyrics with the latest versions. Continue?`,
                 async () => {
                     const success = await onUpdateOfflineHymns();
                     if (success) {
@@ -209,8 +210,8 @@ const OfflineStorageSettings = ({
             );
         } else {
             Alert.confirm(
-                'Download All Hymns',
-                'This will download all hymns for offline use. Continue?',
+                'Download All Hymn Lyrics ',
+                'This will download all hymns lyrics for offline use. Continue?',
                 async () => {
                     const success = await onDownloadAllHymns();
                     if (success) {
@@ -287,7 +288,7 @@ const OfflineStorageSettings = ({
 
             <ListItem
                 icon="download"
-                title={localHymnCount > 0 && preferences.offlineDownload ? 'Update Offline Hymns' : 'Download All Hymns'}
+                title={localHymnCount > 0 && preferences.offlineDownload ? 'Update Offline Hymns Lyrics' : 'Download All Hymns Lyrics'}
                 subtitle={
                     localHymnCount > 0 && preferences.offlineDownload
                         ? 'Refresh your offline hymns with updates'

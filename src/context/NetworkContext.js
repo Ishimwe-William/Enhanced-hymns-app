@@ -13,15 +13,18 @@ export const useNetwork = () => {
 
 export const NetworkProvider = ({ children }) => {
     const [isOffline, setIsOffline] = useState(false);
+    const [isOnWifi, setIsOnWifi] = useState(false);
 
     useEffect(() => {
         const unsubscribe = NetInfo.addEventListener((state) => {
             setIsOffline(!state.isConnected);
+            setIsOnWifi(state.type === 'wifi');
         });
 
         // Fetch initial network state
         NetInfo.fetch().then((state) => {
             setIsOffline(!state.isConnected);
+            setIsOnWifi(state.type === 'wifi');
         });
 
         return () => unsubscribe();
@@ -34,6 +37,7 @@ export const NetworkProvider = ({ children }) => {
 
     const value = {
         isOffline,
+        isOnWifi,
         checkNetworkStatus,
     };
 

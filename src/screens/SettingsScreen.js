@@ -33,7 +33,7 @@ const SettingsScreen = () => {
         dbInitialized,
     } = usePreferences();
 
-    const {forceSync, syncHymns, setSyncing, isOffline, clearAllHymns, getLocalHymnCount} = useHymns();
+    const {forceSync, syncHymns, setSyncing, isOffline, isOnWifi, clearAllHymns, getLocalHymnCount} = useHymns();
 
     const [settingsLoading, setSettingsLoading] = useState(false);
     const [downloadingHymns, setDownloadingHymns] = useState(false);
@@ -208,6 +208,7 @@ const SettingsScreen = () => {
                         settingsLoading={settingsLoading}
                         downloadingHymns={downloadingHymns}
                         isOffline={isOffline}
+                        isOnWifi={isOnWifi}
                         localHymnCount={localHymnCount}
                         onDownloadAllHymns={downloadAllHymns}
                         onUpdateOfflineHymns={updateOfflineHymns}

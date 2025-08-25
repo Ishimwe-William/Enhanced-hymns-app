@@ -8,6 +8,7 @@ import {Feature} from "../components/about/Feature";
 import {MyConstants} from "../utils/constants";
 import {ConnectIcon} from "../components/about/ConnectIcon";
 import {useTheme} from "../context/ThemeContext";
+import Constants from "expo-constants";
 
 const AboutScreen = () => {
     const navigation = useNavigation();

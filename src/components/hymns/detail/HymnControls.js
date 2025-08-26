@@ -1,4 +1,4 @@
-import React, {useState, useRef, useEffect} from 'react';
+import React, {useState, useRef} from 'react';
 import {
     View,
     StyleSheet,
@@ -9,11 +9,13 @@ import {useHymns} from '../../../context/HymnContext';
 import FloatingButton from '../../ui/FloatingButton';
 import {useTheme} from "../../../context/ThemeContext";
 import AudioTrackerPlayer from "../../audioPlayer/AudioTrackerPlayer";
+import YouTubeModal from "../../modals/YoutubeModal";
 
 const HymnControls = ({hymn, onNext, onPrevious, onShare, disabled}) => {
     const {toggleFavorite, isFavorite} = useHymns();
     const [isExpanded, setIsExpanded] = useState(false);
     const [showAudioPlayer, setShowAudioPlayer] = useState(false);
+    const [showYouTubePlayer, setShowYouTubePlayer] = useState(false);
     const [isPlaying, setIsPlaying] = useState(false);
 
     const animatedHeight = useRef(new Animated.Value(0)).current;
@@ -39,24 +41,24 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare, disabled}) => {
             justifyContent: 'space-around',
             alignItems: 'center',
             paddingHorizontal: 16,
-            paddingVertical: 12, // Increased slightly for better proportion with bigger buttons
+            paddingVertical: 12,
         },
         bottomRow: {
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-between',
-            paddingHorizontal: 6, // Reduced from 8
-            paddingVertical: 4, // Reduced from 6
-            minHeight: 40, // Reduced from 50
+            paddingHorizontal: 6,
+            paddingVertical: 4,
+            minHeight: 40,
         },
         alwaysVisibleContainer: {
             flexDirection: 'row',
             justifyContent: 'center',
             flex: 1,
-            gap: 6, // Reduced spacing between buttons
+            gap: 6,
         },
         playButtonContainer: {
-            marginHorizontal: 5, // Removed margin
+            marginHorizontal: 5,
             alignItems: 'center',
             justifyContent: 'center',
             shadowColor: '#000',
@@ -68,23 +70,23 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare, disabled}) => {
             shadowRadius: 2,
             elevation: 2,
             borderWidth: 1,
-            borderRadius: 24, // Reduced to match compact button size (28/2)
+            borderRadius: 24,
             borderColor: colors.textSecondary,
-            width: 38, // Match compact button size
-            height: 38, // Match compact button size
+            width: 38,
+            height: 38,
         },
         audioPlayerContainer: {
             overflow: 'hidden',
-            borderRadius: 6, // Reduced from 8
-            marginRight: 4, // Reduced from 8
+            borderRadius: 6,
+            marginRight: 4,
         },
         progressContainer: {
             position: 'absolute',
             top: 0,
             left: 0,
             right: 0,
-            paddingHorizontal: 12, // Reduced from 16
-            paddingTop: 4, // Reduced from 8
+            paddingHorizontal: 12,
+            paddingTop: 4,
             backgroundColor: colors.primary,
             borderTopLeftRadius: 6,
             borderTopRightRadius: 6,
@@ -105,7 +107,7 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare, disabled}) => {
         Animated.parallel([
             Animated.timing(animatedHeight, {
                 toValue: toValue,
-                duration: 250, // Faster animation
+                duration: 250,
                 useNativeDriver: false,
             }),
             Animated.timing(rotateAnim, {
@@ -128,7 +130,7 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare, disabled}) => {
 
         Animated.timing(audioPlayerWidth, {
             toValue: toValue,
-            duration: 250, // Faster animation
+            duration: 250,
             useNativeDriver: false,
         }).start();
 
@@ -152,7 +154,7 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare, disabled}) => {
         }
     };
 
-    const handlePlay = () => {
+    const handleAudioPlay = () => {
         if (disabled) return;
         handlePlayPause();
     };
@@ -176,6 +178,31 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare, disabled}) => {
         }
     };
 
+    const handleYoutube = () => {
+        if (disabled) return;
+        if (!hymn?.youtube) {
+            Alert.alert('No YouTube Video', 'This hymn does not have a YouTube video available.');
+            return;
+        }
+
+        // Close audio player if it's open
+        if (showAudioPlayer && audioPlayerRef.current) {
+            audioPlayerRef.current.handleStop();
+            setShowAudioPlayer(false);
+            Animated.timing(audioPlayerWidth, {
+                toValue: 0,
+                duration: 250,
+                useNativeDriver: false,
+            }).start();
+        }
+
+        setShowYouTubePlayer(true);
+    };
+
+    const closeYouTubePlayer = () => {
+        setShowYouTubePlayer(false);
+    };
+
     // Handle playing state updates from AudioTrackerPlayer
     const handlePlayingStateChange = (playing) => {
         setIsPlaying(playing);
@@ -184,18 +211,18 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare, disabled}) => {
     // Interpolate animations
     const expandedHeight = animatedHeight.interpolate({
         inputRange: [0, 1],
-        outputRange: [0, 60], // Increased from 60 to accommodate bigger buttons with better spacing
+        outputRange: [0, 60],
     });
 
     const playerWidth = audioPlayerWidth.interpolate({
         inputRange: [0, 1],
-        outputRange: ['0%', '45%'], // Reduced from 50%
+        outputRange: ['0%', '45%'],
     });
 
     const controlButtons = [
         {
             name: 'chevron-back-outline',
-            size: 24, // Increased from 20 to 24
+            size: 24,
             color: disabled ? colors.textSecondary : colors.text,
             onPress: disabled ? null : onPrevious,
             label: 'Previous',
@@ -206,6 +233,13 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare, disabled}) => {
             color: disabled ? colors.textSecondary : colors.text,
             onPress: disabled ? null : handleFont,
             label: 'Font',
+        },
+        {
+            name: 'logo-youtube',
+            size: 24,
+            color: disabled ? colors.textSecondary : (hymn?.youtube ? colors.danger : colors.textSecondary),
+            onPress: disabled ? null : handleYoutube,
+            label: 'YouTube',
         },
         {
             name: isHymnFavorite ? 'heart' : 'heart-outline',
@@ -232,6 +266,13 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare, disabled}) => {
 
     return (
         <View style={styles.container}>
+            {/* YouTube Player Modal - Now separated */}
+            <YouTubeModal
+                visible={showYouTubePlayer}
+                onClose={closeYouTubePlayer}
+                youtubeVideoId={hymn?.youtube}
+            />
+
             {/* Expanded Controls */}
             <Animated.View
                 style={[styles.expandedContainer, {height: expandedHeight}]}
@@ -245,7 +286,7 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare, disabled}) => {
                             color={button.color}
                             onPress={button.onPress}
                             disabled={disabled}
-                            compact={false} // Use regular size (32x32) for better proportion
+                            compact={false}
                         />
                     ))}
                 </View>
@@ -264,9 +305,7 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare, disabled}) => {
                 </Animated.View>
 
                 {/* Always Visible Controls - on the right side */}
-                <View
-                    style={styles.alwaysVisibleContainer}
-                >
+                <View style={styles.alwaysVisibleContainer}>
                     {hymn?.audioUrl && (
                         <>
                             <View style={[
@@ -277,7 +316,7 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare, disabled}) => {
                                     name={showAudioPlayer && isPlaying ? "pause" : "play"}
                                     size={24}
                                     color={hymn?.audioUrl ? colors.header : colors.textSecondary}
-                                    onPress={handlePlay}
+                                    onPress={handleAudioPlay}
                                     disabled={disabled}
                                 />
                             </View>
@@ -295,6 +334,23 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare, disabled}) => {
                             </View>
                         </>
                     )}
+
+                    {/* YouTube Play Button - Only show if YouTube video is available */}
+                    {hymn?.youtube && (
+                        <View style={[
+                            styles.playButtonContainer,
+                            disabled && {opacity: 0.5}
+                        ]}>
+                            <FloatingButton
+                                name="logo-youtube"
+                                size={20}
+                                color={colors.danger}
+                                onPress={handleYoutube}
+                                disabled={disabled}
+                            />
+                        </View>
+                    )}
+
                     <View style={[
                         styles.playButtonContainer,
                         disabled && {opacity: 0.5}
@@ -305,7 +361,6 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare, disabled}) => {
                             color={colors.text}
                             onPress={toggleExpand}
                             disabled={disabled}
-                            // compact={true}
                         />
                     </View>
                 </View>

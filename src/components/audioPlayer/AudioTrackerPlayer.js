@@ -41,26 +41,21 @@ const AudioTrackerPlayer = forwardRef(({hymn, onPlayingStateChange}, ref) => {
                 if (hasLocalAudio) {
                     setAudioSource(hymn.localAudioPath);
                     setAudioAvailable(true);
-                    console.log('Using local audio file:', hymn.localAudioPath);
                 } else {
                     setAudioSource(null);
                     setAudioAvailable(false);
-                    console.log('No local audio available for offline playback');
                 }
             } else {
                 // Online mode: prefer local audio, fallback to remote
                 if (hasLocalAudio) {
                     setAudioSource(hymn.localAudioPath);
                     setAudioAvailable(true);
-                    console.log('Using local audio file (online mode):', hymn.localAudioPath);
                 } else if (hymn?.audioUrl) {
                     setAudioSource(hymn.audioUrl);
                     setAudioAvailable(true);
-                    console.log('Using remote audio URL:', hymn.audioUrl);
                 } else {
                     setAudioSource(null);
                     setAudioAvailable(false);
-                    console.log('No audio source available');
                 }
             }
         } catch (error) {
@@ -123,7 +118,6 @@ const AudioTrackerPlayer = forwardRef(({hymn, onPlayingStateChange}, ref) => {
                 if (track && track.url) {
                     await TrackPlayer.add(track);
                 }
-                console.log('Notification stop triggered and track re-added');
             }
         } catch (error) {
             console.error('Error handling remote event:', error);
@@ -234,7 +228,6 @@ const AudioTrackerPlayer = forwardRef(({hymn, onPlayingStateChange}, ref) => {
             setupPlayerForHymn()
                 .then(() => {
                     setIsPlayerReady(true);
-                    console.log('Player ready with audio source:', audioSource);
                 })
                 .catch((error) => {
                     console.error('Failed to setup TrackPlayer:', error);
@@ -242,7 +235,6 @@ const AudioTrackerPlayer = forwardRef(({hymn, onPlayingStateChange}, ref) => {
                 });
         } else {
             setIsPlayerReady(false);
-            console.log('No audio source available, player not ready');
         }
     }, [audioSource]);
 

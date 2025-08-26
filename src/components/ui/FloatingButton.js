@@ -1,6 +1,6 @@
 import React from 'react';
-import { TouchableOpacity, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import {TouchableOpacity, StyleSheet} from 'react-native';
+import {Ionicons} from '@expo/vector-icons';
 import {useTheme} from "../../context/ThemeContext";
 
 const FloatingButton = ({
@@ -10,7 +10,8 @@ const FloatingButton = ({
                             onPress,
                             style,
                             compact = false, // New prop for extra compact mode
-                            disabled = false
+                            disabled = false,
+                            children
                         }) => {
     const {colors} = useTheme().theme;
 
@@ -45,11 +46,14 @@ const FloatingButton = ({
             activeOpacity={disabled ? 1 : 0.7}
             disabled={disabled}
         >
-            <Ionicons
-                name={name}
-                size={size}
-                color={disabled ? colors.textSecondary : color}
-            />
+            {!children && (
+                <Ionicons
+                    name={name}
+                    size={size}
+                    color={disabled ? colors.textSecondary : color}
+                />
+            )}
+            {children}
         </TouchableOpacity>
     );
 };

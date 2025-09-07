@@ -3,9 +3,16 @@ import {ScrollView, View, Text, StyleSheet} from 'react-native';
 import StanzaView from './StanzaView';
 import RefrainView from './RefrainView';
 import {useTheme} from "../../../context/ThemeContext";
+import {usePreferences} from "../../../context/PreferencesContext";
+import {FONT_SIZES} from "../../../utils/fontSize";
 
 const HymnContent = ({hymn}) => {
     const {colors} = useTheme().theme;
+    const {preferences} = usePreferences();
+
+    const getFontSizes = () => {
+        return FONT_SIZES[preferences.fontSize] || FONT_SIZES.medium;
+    };
 
     if (!hymn) return null;
 
@@ -25,7 +32,7 @@ const HymnContent = ({hymn}) => {
             // Add the stanza
             content.push(
                 <View key={`stanza-${stanza.stanzaNumber}`} style={styles.stanzaContainer}>
-                    {stanza.stanzaNumber !== 0 && <StanzaView stanza={stanza}/>}
+                    {stanza.stanzaNumber !== 0 && <StanzaView stanza={stanza} fontSizes={fontSizes}/>}
 
                 </View>
             );
@@ -42,7 +49,7 @@ const HymnContent = ({hymn}) => {
 
                 content.push(
                     <View key={`refrain-${stanza.stanzaNumber}`} style={styles.refrainContainer}>
-                        <RefrainView refrain={refrainToUse}/>
+                        <RefrainView refrain={refrainToUse} fontSizes={fontSizes}/>
                     </View>
                 );
             }
@@ -51,6 +58,7 @@ const HymnContent = ({hymn}) => {
         return content;
     };
 
+    const fontSizes = getFontSizes();
 
     const styles = StyleSheet.create({
         container: {
@@ -75,14 +83,14 @@ const HymnContent = ({hymn}) => {
             paddingBottom: 8,
         },
         title: {
-            fontSize: 24,
+            fontSize: fontSizes.title,
             fontWeight: 'bold',
             textAlign: 'center',
             marginBottom: 8,
             color: colors.textSecondary,
         },
         hymnNumber: {
-            fontSize: 16,
+            fontSize: fontSizes.number,
             color: colors.textSecondary,
             marginBottom: 4,
         },
@@ -92,7 +100,7 @@ const HymnContent = ({hymn}) => {
             alignItems: 'flex-end',
         },
         origin: {
-            fontSize: 14,
+            fontSize: fontSizes.number,
             fontStyle: 'italic',
             color: '#888',
         },

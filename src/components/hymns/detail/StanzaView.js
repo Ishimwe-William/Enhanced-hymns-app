@@ -1,8 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import {View, Text, StyleSheet} from 'react-native';
 import {useTheme} from "../../../context/ThemeContext";
 
-const StanzaView = ({ stanza }) => {
+const StanzaView = ({stanza, fontSizes}) => {
     const {colors} = useTheme().theme;
 
     const styles = StyleSheet.create({
@@ -18,8 +18,8 @@ const StanzaView = ({ stanza }) => {
         },
         text: {
             textAlign: 'center',
-            fontSize: 18,
-            lineHeight: 28,
+            fontSize: fontSizes.text,
+            lineHeight: fontSizes.lineHeight,
             color: colors.textSecondary,
         },
     });

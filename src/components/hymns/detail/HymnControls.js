@@ -10,6 +10,7 @@ import FloatingButton from '../../ui/FloatingButton';
 import {useTheme} from "../../../context/ThemeContext";
 import AudioTrackerPlayer from "../../audioPlayer/AudioTrackerPlayer";
 import YouTubeModal from "../../modals/YoutubeModal";
+import {usePreferences} from "../../../context/PreferencesContext";
 
 const HymnControls = ({hymn, onNext, onPrevious, onShare, disabled}) => {
     const {toggleFavorite, isFavorite} = useHymns();
@@ -22,6 +23,7 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare, disabled}) => {
     const audioPlayerWidth = useRef(new Animated.Value(0)).current;
     const rotateAnim = useRef(new Animated.Value(0)).current;
     const audioPlayerRef = useRef(null);
+    const { preferences, updatePreference } = usePreferences();
 
     const {colors} = useTheme().theme;
 
@@ -174,7 +176,10 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare, disabled}) => {
 
     const handleFont = () => {
         if (!disabled) {
-            Alert.alert('Font Size', 'Font size adjustment coming soon!');
+            const sizes = ['small', 'medium', 'large', 'xlarge'];
+            const currentIndex = sizes.indexOf(preferences.fontSize);
+            const nextIndex = (currentIndex + 1) % sizes.length;
+            updatePreference('fontSize', sizes[nextIndex]);
         }
     };
 

@@ -2,27 +2,27 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import {useTheme} from "../../../context/ThemeContext";
 
-const RefrainView = ({ refrain }) => {
+const RefrainView = ({ refrain, fontSizes }) => {
     const colors = useTheme().theme.colors;
 
     const styles = StyleSheet.create({
         container: {
             marginBottom: 24,
-            alignItems:'center',
+            alignItems: 'center',
             paddingLeft: 16,
             borderLeftWidth: 3,
             borderLeftColor: colors.header,
         },
         title: {
-            fontSize: 16,
+            fontSize: fontSizes.text,
             fontWeight: '600',
             color: colors.header,
             marginBottom: 8,
         },
         text: {
             textAlign: 'center',
-            fontSize: 18,
-            lineHeight: 28,
+            fontSize: fontSizes.text,
+            lineHeight: fontSizes.lineHeight,
             color: colors.textSecondary,
             fontStyle: 'italic',
         },

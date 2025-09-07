@@ -14,7 +14,7 @@ import {useFilteredHymns} from "../../hooks/useFilteredHymns";
 
 const HymnsList = () => {
     const navigation = useNavigation();
-    const {hymns, loading, loadHymns, getLocalHymnCount} = useHymns();
+    const {hymns, loading, syncHymns, setSyncing, getLocalHymnCount} = useHymns();
     const [searchQuery, setSearchQuery] = useState('');
     const {colors} = useTheme().theme;
     const [localHymnCount, setLocalHymnCount] = useState(0);
@@ -58,6 +58,21 @@ const HymnsList = () => {
         );
     };
 
+    const refreshHymns = async () => {
+        try {
+            const success = await syncHymns(true, setSyncing, hymns => setHymns(hymns));
+
+            if (success !== false) {
+                await loadLocalHymnCount();
+                return true;
+            } else {
+                throw new Error('Failed to update hymns');
+            }
+        } catch (error) {
+            console.error('Error syncing hymns:', error);
+        }
+    }
+
     return (
         <View style={styles.container}>
             <Header
@@ -65,7 +80,7 @@ const HymnsList = () => {
                 showMenu
                 showRefresh
                 onMenu={handleMenuPress}
-                onRefresh={loadHymns}
+                onRefresh={refreshHymns}
                 showMore={false}
             />{loading ? (
             <LoadingScreen message="Loading hymns..."/>

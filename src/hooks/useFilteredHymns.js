@@ -10,10 +10,10 @@ export const useFilteredHymns = (hymns = [], searchQuery = '') => {
             hymn.title?.toLowerCase().includes(query) ||
             hymn.number?.toString().includes(query) ||
             hymn.origin?.toLowerCase().includes(query) ||
-            hymn.stanzas.some(stanza =>
+            hymn.stanzas?.some(stanza =>
                 stanza.text.toLowerCase().includes(query)
             ) ||
-            hymn.refrains.some(refrain =>
+            hymn.refrains?.some(refrain =>
                 refrain.text.toLowerCase().includes(query)
             )
         );

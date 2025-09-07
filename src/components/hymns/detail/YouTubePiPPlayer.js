@@ -168,6 +168,7 @@ const YouTubePiPPlayer = forwardRef(({ youtubeVideoId }, ref) => {
                     onChangeState={onStateChange}
                     onReady={onReady}
                     height={250}
+                    useLocalHTML={true}
                     webViewStyle={styles.webView}
                     initialPlayerParams={{
                         cc_lang_pref: 'us',

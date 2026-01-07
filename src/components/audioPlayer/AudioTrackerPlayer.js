@@ -213,8 +213,8 @@ const AudioTrackerPlayer = forwardRef(({hymn, onPlayingStateChange}, ref) => {
             }
         },
         handleSeek: handleSeek,
-        isAudioAvailable: () => audioAvailable,
-        getAudioSource: () => audioSource,
+        // isAudioAvailable: () => audioAvailable,
+       // getAudioSource: () => audioSource,
     }));
 
     useTrackPlayerEvents([Event.RemotePlay, Event.RemotePause, Event.RemoteStop], async (event) => {

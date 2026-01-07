@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
 import HymnContent from '../../components/hymns/detail/HymnContent';
-import {useTheme} from "../../context/ThemeContext"; // Import your component
+import {useTheme} from "../../context/ThemeContext";
 
 export default function ShareHymnModal({
                                            visible,

@@ -64,6 +64,6 @@ export default ({ config }) => {
             EXPO_PUBLIC_APP_DEV: process.env.EXPO_PUBLIC_APP_DEV,
             EXPO_PUBLIC_ANDROID_VERSION_CODE: process.env.EXPO_PUBLIC_ANDROID_VERSION_CODE,
         },
-        plugins: ["expo-secure-store", "expo-sqlite"],
+        plugins: ["expo-secure-store", "expo-sqlite",  "expo-web-browser"],
     };
 };

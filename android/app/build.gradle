@@ -92,8 +92,8 @@ android {
         applicationId 'com.bunsenplus.hymnsapp'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 16
-        versionName "1.1.7"
+        versionCode 17
+        versionName "1.1.8"
     }
     signingConfigs {
         debug {

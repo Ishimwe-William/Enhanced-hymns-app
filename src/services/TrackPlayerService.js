@@ -35,7 +35,6 @@ export const setupTrackPlayer = async () => {
         });
 
         isTrackPlayerSetup = true;
-        console.log('TrackPlayer setup completed successfully');
     } catch (error) {
         console.error('Error setting up TrackPlayer:', error);
         isTrackPlayerSetup = false;

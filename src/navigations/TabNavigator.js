@@ -2,9 +2,9 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
-
+import {getFocusedRouteNameFromRoute} from '@react-navigation/native';
 import HymnsStackNavigator from './stacks/HymnsStackNavigator';
-import CategoriesScreen from '../screens/hymns/CategoriesScreen';
+//import CategoriesScreen from '../screens/hymns/CategoriesScreen';
 import SearchScreen from '../screens/hymns/SearchScreen';
 import RecentScreen from '../screens/hymns/RecentScreen';
 
@@ -62,13 +62,19 @@ const TabNavigator = () => {
             <Tab.Screen
                 name="HymnsStack"
                 component={HymnsStackNavigator}
-                options={{ tabBarLabel: 'Hymns' }}
+                options={({route}) => {
+                    const routeName = getFocusedRouteNameFromRoute(route) ?? 'HymnsList';
+                    return {
+                        tabBarStyle: routeName !== 'HymnsList' && {display: 'none'},
+                        tabBarLabel: 'Hymns'
+                    };
+                }}
             />
-            <Tab.Screen
-                name="Categories"
-                component={CategoriesScreen}
-                options={{ tabBarLabel: 'Categories' }}
-            />
+            {/*<Tab.Screen*/}
+            {/*    name="Categories"*/}
+            {/*    component={CategoriesScreen}*/}
+            {/*    options={{ tabBarLabel: 'Categories' }}*/}
+            {/*/>*/}
             <Tab.Screen
                 name="Search"
                 component={SearchScreen}

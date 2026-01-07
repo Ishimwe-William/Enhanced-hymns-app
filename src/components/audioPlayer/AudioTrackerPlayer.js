@@ -1,4 +1,4 @@
-import React, {useEffect, useState, forwardRef, useImperativeHandle} from 'react';
+import React, {useEffect, useState, forwardRef, useImperativeHandle, useRef} from 'react';
 import {View, Text, StyleSheet, Alert} from 'react-native';
 import TrackPlayer, {
     State,
@@ -17,92 +17,206 @@ import Constants from "expo-constants";
 const AudioTrackerPlayer = forwardRef(({hymn, onPlayingStateChange}, ref) => {
     const [isPlayerReady, setIsPlayerReady] = useState(false);
     const [isSeeking, setIsSeeking] = useState(false);
-    const [audioSource, setAudioSource] = useState(null);
+    // Initialize as undefined to signify "not checked yet"
+    const [audioSource, setAudioSource] = useState(undefined);
     const [audioAvailable, setAudioAvailable] = useState(false);
+
     const {playing} = useIsPlaying();
     const progress = useProgress();
     const {isOffline} = useHymns();
     const {artwork} = useTheme().theme;
 
-    const determineAudioSource = async () => {
-        if (!hymn) {
-            setAudioSource(null);
-            setAudioAvailable(false);
+    // Ref to prevent race conditions during setup
+    const isSettingUpRef = useRef(false);
+
+    // 1. OPTIMIZATION: Debounce the check to let UI slide animation finish first
+    useEffect(() => {
+        let isMounted = true;
+
+        const checkAudio = async () => {
+            if (!hymn) {
+                if(isMounted) {
+                    setAudioSource(null);
+                    setAudioAvailable(false);
+                }
+                return;
+            }
+
+            try {
+                // Optimistically assume remote first to avoid blocking immediately
+                let source = hymn?.audioUrl;
+                let exists = false;
+
+                // Only check filesystem if we actually have a path
+                // This reduces overhead if no local path is defined
+                if (hymn?.localAudioPath) {
+                    const info = await FileSystem.getInfoAsync(hymn.localAudioPath);
+                    if (info.exists) {
+                        source = hymn.localAudioPath;
+                        exists = true;
+                    }
+                }
+
+                if (!isMounted) return;
+
+                if (isOffline) {
+                    if (exists) {
+                        setAudioSource(source);
+                        setAudioAvailable(true);
+                    } else {
+                        setAudioSource(null);
+                        setAudioAvailable(false);
+                    }
+                } else {
+                    // Online mode: Use local if exists, otherwise remote
+                    if (exists || hymn?.audioUrl) {
+                        setAudioSource(exists ? source : hymn.audioUrl);
+                        setAudioAvailable(true);
+                    } else {
+                        setAudioSource(null);
+                        setAudioAvailable(false);
+                    }
+                }
+            } catch (error) {
+                console.error('Error determining audio source:', error);
+                if(isMounted) {
+                    setAudioSource(null);
+                    setAudioAvailable(false);
+                }
+            }
+        };
+
+        // Delay check by 50ms to prioritize slide animation
+        const timer = setTimeout(checkAudio, 50);
+
+        return () => {
+            isMounted = false;
+            clearTimeout(timer);
+        };
+    }, [hymn?.firebaseId, hymn?.audioUrl, hymn?.localAudioPath, isOffline]);
+
+    // 2. OPTIMIZATION: Intelligent Player Setup (Don't reset if same track)
+    useEffect(() => {
+        if (!audioSource) {
+            setIsPlayerReady(false);
             return;
         }
 
-        try {
-            // Check if local audio file exists
-            const hasLocalAudio = hymn?.localAudioPath &&
-                await FileSystem.getInfoAsync(hymn.localAudioPath).then(info => info.exists);
+        const loadTrack = async () => {
+            if (isSettingUpRef.current) return;
+            isSettingUpRef.current = true;
 
-            if (isOffline) {
-                // Offline mode: only use local audio
-                if (hasLocalAudio) {
-                    setAudioSource(hymn.localAudioPath);
-                    setAudioAvailable(true);
-                } else {
-                    setAudioSource(null);
-                    setAudioAvailable(false);
+            try {
+                if (!isSetup()) {
+                    await setupTrackPlayer();
                 }
-            } else {
-                // Online mode: prefer local audio, fallback to remote
-                if (hasLocalAudio) {
-                    setAudioSource(hymn.localAudioPath);
-                    setAudioAvailable(true);
-                } else if (hymn?.audioUrl) {
-                    setAudioSource(hymn.audioUrl);
-                    setAudioAvailable(true);
-                } else {
-                    setAudioSource(null);
-                    setAudioAvailable(false);
+
+                // CHECK CURRENT TRACK BEFORE RESETTING
+                // If the player is already loaded with this song, skip the heavy work.
+                const currentTrackIndex = await TrackPlayer.getActiveTrackIndex();
+                if (currentTrackIndex !== undefined) {
+                    const currentTrack = await TrackPlayer.getTrack(currentTrackIndex);
+                    // Compare URLs to see if it's the same song
+                    if (currentTrack?.url === audioSource) {
+                        setIsPlayerReady(true);
+                        isSettingUpRef.current = false;
+                        return;
+                    }
                 }
-            }
-        } catch (error) {
-            console.error('Error determining audio source:', error);
-            setAudioSource(null);
-            setAudioAvailable(false);
-        }
-    };
 
-    // Create track object from hymn prop with determined audio source
-    const createTrack = () => {
-        if (!audioSource) return null;
+                // It's a different track, so we reset and add
+                await TrackPlayer.reset();
 
-        return {
-            id: hymn?.firebaseId || hymn?.number || 'default-hymn',
-            url: audioSource,
-            title: `${hymn.number} - ${hymn?.title}` || 'Unknown Hymn',
-            artist:Constants.expoConfig.extra.EXPO_PUBLIC_APP_NAME,
-            artwork: artwork ,
-            duration: 0,
-        };
-    };
+                const track = {
+                    id: hymn?.firebaseId || hymn?.number || 'default-hymn',
+                    url: audioSource,
+                    title: `${hymn.number} - ${hymn?.title}` || 'Unknown Hymn',
+                    artist: Constants.expoConfig.extra.EXPO_PUBLIC_APP_NAME,
+                    artwork: artwork,
+                    duration: 0,
+                };
 
-
-// Setup TrackPlayer service
-    const setupPlayerForHymn = async () => {
-        try {
-            // Ensure TrackPlayer is setup first
-            if (!isSetup()) {
-                await setupTrackPlayer();
-            }
-
-            // Clear existing queue and add new track
-            await TrackPlayer.reset();
-
-            // Fix: Call createTrack() to get the actual track object
-            const track = createTrack();
-            if (track && track.url) {
                 await TrackPlayer.add(track);
+                setIsPlayerReady(true);
+            } catch (error) {
+                console.error('Failed to setup TrackPlayer:', error);
+                setIsPlayerReady(false);
+            } finally {
+                isSettingUpRef.current = false;
             }
+        };
+
+        loadTrack();
+    }, [audioSource, artwork, hymn]);
+
+    // Handle seeking
+    const handleSeek = async (seekTime) => {
+        try {
+            if (!isPlayerReady || progress.duration === 0) return;
+            setIsSeeking(true);
+            await TrackPlayer.seekTo(seekTime);
+            // Small delay to prevent UI jumping
+            setTimeout(() => setIsSeeking(false), 100);
         } catch (error) {
-            console.error('Failed to setup TrackPlayer for hymn:', error);
-            throw error;
+            console.error('Error seeking:', error);
+            setIsSeeking(false);
         }
     };
 
-// Also fix the remote control event handler:
+    useImperativeHandle(ref, () => ({
+        handlePlayPause: async () => {
+            try {
+                if (!audioAvailable) {
+                    const msg = isOffline
+                        ? 'Audio not available offline. Please download this hymn first.'
+                        : 'No audio available for this hymn';
+                    Alert.alert('Audio Unavailable', msg);
+                    return;
+                }
+
+                if (!isPlayerReady) {
+                    if (audioSource) {
+                        // It's likely loading, ignore or show toast
+                    } else {
+                        Alert.alert('Error', 'Player is not ready yet');
+                    }
+                    return;
+                }
+
+                const playbackState = await TrackPlayer.getPlaybackState();
+                const state = playbackState.state || playbackState; // Handle different RNTP versions
+
+                // FIX: If track ended or stopped, restart from 0
+                if (state === State.Ended || state === State.Stopped) {
+                    await TrackPlayer.seekTo(0);
+                    await TrackPlayer.play();
+                    return;
+                }
+
+                if (state === State.Playing) {
+                    await TrackPlayer.pause();
+                } else {
+                    await TrackPlayer.play();
+                }
+            } catch (error) {
+                console.error('Error in handlePlayPause:', error);
+            }
+        },
+        handleStop: async () => {
+            try {
+                if (!isPlayerReady) return;
+                // OPTIMIZATION: Just pause and seek to 0 instead of resetting
+                await TrackPlayer.pause();
+                await TrackPlayer.seekTo(0);
+            } catch (error) {
+                console.error('Error in handleStop:', error);
+            }
+        },
+        handleSeek: handleSeek,
+        isAudioAvailable: () => audioAvailable,
+        getAudioSource: () => audioSource,
+    }));
+
     useTrackPlayerEvents([Event.RemotePlay, Event.RemotePause, Event.RemoteStop], async (event) => {
         try {
             if (event.type === Event.RemotePlay) {
@@ -110,137 +224,22 @@ const AudioTrackerPlayer = forwardRef(({hymn, onPlayingStateChange}, ref) => {
             } else if (event.type === Event.RemotePause) {
                 await TrackPlayer.pause();
             } else if (event.type === Event.RemoteStop) {
-                await TrackPlayer.stop();
-                await TrackPlayer.reset();
-
-                // Fix: Call createTrack() to get the actual track object
-                const track = createTrack();
-                if (track && track.url) {
-                    await TrackPlayer.add(track);
-                }
+                await TrackPlayer.pause();
+                await TrackPlayer.seekTo(0);
             }
         } catch (error) {
             console.error('Error handling remote event:', error);
         }
     });
 
-    // Handle seeking to specific time
-    const handleSeek = async (seekTime) => {
-        try {
-            if (!isPlayerReady || progress.duration === 0) {
-                return;
-            }
-
-            setIsSeeking(true);
-            await TrackPlayer.seekTo(seekTime);
-
-            // Add a small delay to prevent UI jumping
-            setTimeout(() => {
-                setIsSeeking(false);
-            }, 100);
-        } catch (error) {
-            console.error('Error seeking:', error);
-            Alert.alert('Error', 'Failed to seek: ' + error.message);
-            setIsSeeking(false);
-        }
-    };
-
-    // Get appropriate error message based on context
-    const getUnavailableMessage = () => {
-        if (isOffline) {
-            return 'Audio not available offline. Please download this hymn first.';
-        }
-        return 'No audio available for this hymn';
-    };
-
-    // Expose methods to parent component
-    useImperativeHandle(ref, () => ({
-        handlePlayPause: async () => {
-            try {
-                if (!audioAvailable) {
-                    Alert.alert('Audio Unavailable', getUnavailableMessage());
-                    return;
-                }
-
-                if (!isPlayerReady) {
-                    Alert.alert('Error', 'Player is not ready yet');
-                    return;
-                }
-
-                const playbackState = await TrackPlayer.getPlaybackState();
-                if (playbackState.state === State.Playing) {
-                    await TrackPlayer.pause();
-                } else {
-                    await TrackPlayer.play();
-                }
-            } catch (error) {
-                console.error('Error in handlePlayPause:', error);
-                Alert.alert('Error', 'Failed to toggle playback: ' + error.message);
-            }
-        },
-        handleStop: async () => {
-            try {
-                if (!isPlayerReady) {
-                    return;
-                }
-
-                await TrackPlayer.stop();
-                await TrackPlayer.reset();
-
-                const track = createTrack();
-                if (track) {
-                    await TrackPlayer.add(track);
-                    await TrackPlayer.seekTo(0);
-                }
-            } catch (error) {
-                console.error('Error in handleStop:', error);
-                Alert.alert('Error', 'Failed to stop playback: ' + error.message);
-            }
-        },
-        handleSeek: handleSeek,
-        // Expose audio availability status
-        isAudioAvailable: () => audioAvailable,
-        getAudioSource: () => audioSource,
-    }));
-
-    // Notify parent component of playing state changes
     useEffect(() => {
         if (onPlayingStateChange) {
             onPlayingStateChange(playing);
         }
     }, [playing, onPlayingStateChange]);
-
-    // Notify parent component of playing state changes
-    useEffect(() => {
-        if (onPlayingStateChange) {
-            onPlayingStateChange(playing);
-        }
-    }, [playing, onPlayingStateChange]);
-
-    // Determine audio source when hymn, offline status, or local audio path changes
-    useEffect(() => {
-        determineAudioSource();
-    }, [hymn?.firebaseId, hymn?.audioUrl, hymn?.localAudioPath, isOffline]);
-
-    // Setup player when audio source is determined
-    useEffect(() => {
-        if (audioSource) {
-            setupPlayerForHymn()
-                .then(() => {
-                    setIsPlayerReady(true);
-                })
-                .catch((error) => {
-                    console.error('Failed to setup TrackPlayer:', error);
-                    setIsPlayerReady(false);
-                });
-        } else {
-            setIsPlayerReady(false);
-        }
-    }, [audioSource]);
 
     const progressPercentage = progress.duration > 0 ? (progress.position / progress.duration) * 100 : 0;
 
-    // Show message if no hymn or audio URL
     if (!hymn) {
         return (
             <View style={styles.container}>
@@ -266,23 +265,13 @@ const styles = StyleSheet.create({
         backgroundColor: 'white',
         borderRadius: 15,
         shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
+        shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
         elevation: 5,
     },
-    container: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 20,
-    },
-    statusText: {
-        fontSize: 16,
-        color: '#666',
-    }
+    container: { alignItems: 'center', justifyContent: 'center', padding: 20 },
+    statusText: { fontSize: 16, color: '#666' }
 });
 
 export default AudioTrackerPlayer;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
-import { View, StyleSheet, Alert, Platform, Text, TouchableOpacity, ActivityIndicator, AppState } from 'react-native';
+import { View, StyleSheet, Alert, Platform, Text, ActivityIndicator, AppState } from 'react-native';
 import YouTube from 'react-native-youtube-iframe';
 import PipHandler from '@videosdk.live/react-native-pip-android';
 import { useTheme } from '../../../context/ThemeContext';
@@ -23,14 +23,37 @@ const YouTubePiPPlayer = forwardRef(({ youtubeVideoId }, ref) => {
                 Alert.alert('Not Supported', 'Picture-in-Picture requires Android 8.0+.');
                 return;
             }
-            if (!playing) {
-                Alert.alert('Video Not Playing', 'Start playing video first.');
+
+            // FIX 1: Prevent "Black Hole" minimization if video isn't loaded yet
+            if (!isReady) {
+                Alert.alert('Please Wait', 'Video is still loading...');
                 return;
             }
+
+            // FIX 2: Auto-play if paused (instead of error)
+            // We play, wait a moment for the video to wake up, then enter PiP.
+            if (!playing) {
+                setPlaying(true);
+
+                // Wait 500ms to ensure video starts rendering before minimizing app
+                setTimeout(async () => {
+                    try {
+                        await PipHandler.enterPipMode(480, 270);
+                        setPipActive(true);
+                        if (pipChangeCallback.current) {
+                            pipChangeCallback.current(true);
+                        }
+                    } catch (error) {
+                        console.error('PiP failed after autoplay', error);
+                    }
+                }, 500);
+                return;
+            }
+
+            // Normal Entry (Already playing)
             try {
                 await PipHandler.enterPipMode(480, 270);
                 setPipActive(true);
-                // Notify parent component
                 if (pipChangeCallback.current) {
                     pipChangeCallback.current(true);
                 }
@@ -45,7 +68,6 @@ const YouTubePiPPlayer = forwardRef(({ youtubeVideoId }, ref) => {
         },
         getCurrentPipState: () => pipActive,
         resetPipState: () => {
-            console.log('Manually resetting PiP state');
             setPipActive(false);
             if (pipChangeCallback.current) {
                 pipChangeCallback.current(false);
@@ -61,7 +83,6 @@ const YouTubePiPPlayer = forwardRef(({ youtubeVideoId }, ref) => {
                 if (supported) {
                     PipHandler.setDefaultPipDimensions(480, 270);
 
-                    // Set up PiP event listeners
                     const pipEnterListener = () => {
                         setPipActive(true);
                         if (pipChangeCallback.current) {
@@ -76,7 +97,6 @@ const YouTubePiPPlayer = forwardRef(({ youtubeVideoId }, ref) => {
                         }
                     };
 
-                    // Add listeners if the PipHandler supports them
                     if (PipHandler.addPipListener) {
                         PipHandler.addPipListener('enter', pipEnterListener);
                         PipHandler.addPipListener('exit', pipExitListener);
@@ -96,16 +116,12 @@ const YouTubePiPPlayer = forwardRef(({ youtubeVideoId }, ref) => {
         return cleanup;
     }, []);
 
-    // Additional AppState listener for better PiP detection
     useEffect(() => {
         const handleAppStateChange = (nextAppState) => {
-            console.log('Player AppState changed:', nextAppState, 'Current PiP:', pipActive);
-
             if (Platform.OS === 'android') {
                 if (nextAppState === 'active') {
-                    // Always reset PiP state when coming back to active
+                    // Slight delay to ensure UI is ready before resetting state
                     setTimeout(() => {
-                        console.log('Resetting PiP state from player');
                         setPipActive(false);
                         if (pipChangeCallback.current) {
                             pipChangeCallback.current(false);
@@ -120,7 +136,17 @@ const YouTubePiPPlayer = forwardRef(({ youtubeVideoId }, ref) => {
     }, []);
 
     const onStateChange = (state) => {
-        setPlaying(state === 'playing');
+        if (state === 'ended') {
+            setPlaying(false);
+        } else if (state === 'playing') {
+            setPlaying(true);
+        } else if (state === 'paused') {
+            setPlaying(false);
+        }
+    };
+
+    const onError = (error) => {
+        console.error("YouTube Player Error:", error);
     };
 
     const onReady = () => setIsReady(true);
@@ -167,18 +193,24 @@ const YouTubePiPPlayer = forwardRef(({ youtubeVideoId }, ref) => {
                     play={playing}
                     onChangeState={onStateChange}
                     onReady={onReady}
+                    onError={onError}
                     height={250}
-                    useLocalHTML={true}
-                    webViewStyle={styles.webView}
+                    // KEY CONFIGS FOR STABILITY & ERROR 153
+                    webViewStyle={{ opacity: 0.99, backgroundColor: 'black' }}
+                    webViewProps={{
+                        androidLayerType: 'hardware',
+                        startInLoadingState: true,
+                        renderToHardwareTextureAndroid: true,
+                    }}
                     initialPlayerParams={{
                         cc_lang_pref: 'us',
                         showClosedCaptions: true,
                         rel: false,
                         modestbranding: 1,
-                        playsinline: Platform.OS === 'ios' ? 0 : 1,
+                        playsinline: 1,
                         controls: 1,
-                        fs: 1,
-                        iv_load_policy: 3,
+                        origin: 'https://www.youtube.com', // Fixes Error 153
+                        preventFullScreen: false,
                     }}
                 />
                 {!isReady && (

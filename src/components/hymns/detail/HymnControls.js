@@ -1,4 +1,4 @@
-import React, {useState, useRef} from 'react';
+import React, {useState, useRef, useMemo} from 'react';
 import {
     View,
     StyleSheet,
@@ -27,7 +27,7 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare, disabled}) => {
 
     const {colors} = useTheme().theme;
 
-    const styles = StyleSheet.create({
+    const styles = useMemo(() => StyleSheet.create({
         container: {
             backgroundColor: colors.primary,
             borderTopWidth: 1,
@@ -97,7 +97,7 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare, disabled}) => {
             alignItems: 'center',
             justifyContent: 'center',
         },
-    });
+    }), [colors]);
 
     const isHymnFavorite = isFavorite(hymn?.id);
 

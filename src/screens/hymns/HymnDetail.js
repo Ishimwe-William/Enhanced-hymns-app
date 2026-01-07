@@ -1,6 +1,7 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useRef} from 'react';
 import {StyleSheet, View} from 'react-native';
 import {useNavigation, useRoute} from '@react-navigation/native';
+import PagerView from 'react-native-pager-view';
 import Header from '../../components/ui/Header';
 import HymnContent from '../../components/hymns/detail/HymnContent';
 import HymnControls from '../../components/hymns/detail/HymnControls';
@@ -11,10 +12,7 @@ import {HymnDetailModal} from '../../components/modals/HymnDetailModal';
 import {HymnShareCapture} from '../../components/hymns/detail/HymnShareCapture';
 import {HymnShareHandler} from '../../utils/handlers/HymnShareHandler';
 import WarningBanner from "../../components/ui/WarningBanner";
-import Animated, {useAnimatedStyle} from 'react-native-reanimated';
-import {GestureDetector} from "react-native-gesture-handler";
-import useHymnNavigation from '../../hooks/useHymnNavigation';
-import {createHymnPanGesture} from '../../utils/handlers/HymnGestureHandler';
+import useHymnPager from '../../hooks/useHymnPager';
 
 const HymnDetail = () => {
     const navigation = useNavigation();
@@ -24,57 +22,62 @@ const HymnDetail = () => {
     const {hymns, loadHymnDetails} = useHymns();
     const {colors} = useTheme().theme;
 
-    // Use internal state to track current hymn
-    const [currentHymnId, setCurrentHymnId] = useState(initialHymnId);
-    const [hymn, setHymn] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [isCapturing, setIsCapturing] = useState(false);
-    const [error, setError] = useState(null);
-
+    const pagerRef = useRef(null);
     const viewShotRef = useRef(null);
 
-    // Initialize navigation handler
-    const navigationHandler = useHymnNavigation(
-        hymn,
-        hymns,
-        (newHymn) => setHymn(newHymn)
-    );
+    // Optimized hook handles the "Current" hymn logic for us
+    const {
+        hymnPages,
+        currentHymn,
+        loading,
+        error,
+        canGoNext,
+        canGoPrevious,
+        handlePageChange,
+    } = useHymnPager(initialHymnId, hymns, loadHymnDetails);
 
-    // Create gesture handler
-    const panGesture = createHymnPanGesture(navigationHandler);
+    const [isCapturing, setIsCapturing] = React.useState(false);
 
-    // Initialize share handler
-    const shareHandler = hymn ? new HymnShareHandler(hymn, viewShotRef, setIsCapturing) : null;
+    const shareHandler = currentHymn ?
+        new HymnShareHandler(currentHymn, viewShotRef, setIsCapturing) : null;
 
     const styles = StyleSheet.create({
         container: {
             flex: 1,
             backgroundColor: colors.card,
         },
-        contentContainer: {
+        pagerContainer: {
             flex: 1,
+        },
+        page: {
+            flex: 1,
+        },
+        controlsContainer: {
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            backgroundColor: colors.card,
+            zIndex: 10,
         },
     });
 
-    // Load hymn whenever currentHymnId changes
-    useEffect(() => {
-        const loadHymn = async () => {
-            if (!currentHymnId) return;
+    const handlePageSelected = (e) => {
+        const position = e.nativeEvent.position;
+        handlePageChange(position, pagerRef);
+    };
 
-            try {
-                setLoading(true);
-                const hymnData = await loadHymnDetails(currentHymnId);
-                setHymn(hymnData);
-            } catch (error) {
-                console.error('Error loading hymn:', error);
-                setError('Failed to load hymn. Please try again.');
-            } finally {
-                setLoading(false);
-            }
-        };
+    const handleNext = () => {
+        if (canGoNext) {
+            pagerRef.current?.setPage(2);
+        }
+    };
 
-        loadHymn();
-    }, [currentHymnId]);
+    const handlePrevious = () => {
+        if (canGoPrevious) {
+            pagerRef.current?.setPage(0);
+        }
+    };
 
     const handleBack = () => {
         navigation.goBack();
@@ -88,31 +91,25 @@ const HymnDetail = () => {
         />
     );
 
-    // Animated styles
-    const animatedContentStyle = useAnimatedStyle(() => {
-        return {
-            transform: [
-                {translateX: navigationHandler.translateX.value},
-                {scale: navigationHandler.scale.value}
-            ],
-            opacity: navigationHandler.opacity.value,
-        };
-    });
+    // 1. DYNAMIC HEADER TITLE
+    // Updates instantly as you slide because currentHymn updates instantly
+    const headerTitle = currentHymn
+        ? `${currentHymn.number} - ${currentHymn.title}`
+        : "Loading...";
 
-    // Show loading while loading
     if (loading) {
         return <LoadingScreen message="Loading hymn..."/>;
     }
 
-    // Show loading if hymn hasn't loaded yet
-    if (!hymn) {
-        return <LoadingScreen message="Loading hymn data..."/>;
-    }
-
-    if (error) {
+    if (error || !currentHymn) {
         return (
-            <View>
-                <WarningBanner message={error || "Unknown error! Please try again."}/>
+            <View style={styles.container}>
+                <Header
+                    title="Error"
+                    showBack
+                    onBack={handleBack}
+                />
+                <WarningBanner message={error || "Failed to load hymn"}/>
             </View>
         );
     }
@@ -120,31 +117,48 @@ const HymnDetail = () => {
     return (
         <View style={styles.container}>
             <Header
-                title={`${hymn.number} - ${hymn.title}` || 'Hymn'}
+                title={headerTitle}
                 showBack
                 onBack={handleBack}
                 showMore={true}
                 modalContent={renderModalContent}
             />
 
-            <GestureDetector gesture={panGesture}>
-                <Animated.View style={[styles.contentContainer, animatedContentStyle]}>
-                    <HymnContent hymn={hymn}/>
+            <PagerView
+                ref={pagerRef}
+                style={styles.pagerContainer}
+                initialPage={1}
+                onPageSelected={handlePageSelected}
+            >
+                {hymnPages.map((hymn, index) => (
+                    <View key={index} style={styles.page}>
+                        {hymn ? (
+                            <HymnContent
+                                hymn={hymn}
+                                showTitle={false} // Hidden here since it's in the Header now
+                            />
+                        ) : (
+                            <View style={styles.page} />
+                        )}
+                    </View>
+                ))}
+            </PagerView>
 
-                    <HymnControls
-                        hymn={hymn}
-                        onNext={navigationHandler.handleNext}
-                        onPrevious={navigationHandler.handlePrevious}
-                        onShare={shareHandler?.handleShare}
-                        disabled={navigationHandler.isTransitioning}
-                    />
-                </Animated.View>
-            </GestureDetector>
+            {/* Controls detached from pager - always visible and reactive */}
+            <View style={styles.controlsContainer}>
+                <HymnControls
+                    hymn={currentHymn}
+                    onNext={handleNext}
+                    onPrevious={handlePrevious}
+                    onShare={shareHandler?.handleShare}
+                    disabled={false}
+                />
+            </View>
 
             {isCapturing && (
                 <HymnShareCapture
                     ref={viewShotRef}
-                    hymn={hymn}
+                    hymn={currentHymn}
                 />
             )}
         </View>

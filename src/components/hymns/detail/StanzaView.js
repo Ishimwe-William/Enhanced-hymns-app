@@ -1,11 +1,12 @@
-import React from 'react';
+import React, {useMemo} from 'react';
 import {View, Text, StyleSheet} from 'react-native';
 import {useTheme} from "../../../context/ThemeContext";
 
 const StanzaView = ({stanza, fontSizes}) => {
     const {colors} = useTheme().theme;
 
-    const styles = StyleSheet.create({
+    // MEMOIZE STYLES: Only recreate if colors or fontSizes change
+    const styles = useMemo(() => StyleSheet.create({
         container: {
             marginBottom: 24,
             alignItems: "center",
@@ -22,7 +23,7 @@ const StanzaView = ({stanza, fontSizes}) => {
             lineHeight: fontSizes.lineHeight,
             color: colors.textSecondary,
         },
-    });
+    }), [colors, fontSizes]);
 
     return (
         <View style={styles.container}>
@@ -32,5 +33,4 @@ const StanzaView = ({stanza, fontSizes}) => {
     );
 };
 
-
-export default StanzaView;
+export default React.memo(StanzaView); // Prevent unnecessary re-renders

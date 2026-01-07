@@ -1,4 +1,3 @@
-import React from 'react';
 import { Alert as RNAlert } from 'react-native';
 
 export const MyAlert = {

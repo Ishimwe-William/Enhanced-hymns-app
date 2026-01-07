@@ -6,7 +6,7 @@ import {useTheme} from "../../../context/ThemeContext";
 import {usePreferences} from "../../../context/PreferencesContext";
 import {FONT_SIZES} from "../../../utils/fontSize";
 
-const HymnContent = ({hymn}) => {
+const HymnContent = ({hymn, showTitle = false}) => {
     const {colors} = useTheme().theme;
     const {preferences} = usePreferences();
 
@@ -16,33 +16,25 @@ const HymnContent = ({hymn}) => {
 
     if (!hymn) return null;
 
-    // Function to render content in the correct order
     const renderHymnContent = () => {
         const content = [];
 
-        // Sort stanzas by stanzaNumber to ensure correct order
         const sortedStanzas = hymn.stanzas ?
             Object.values(hymn.stanzas).sort((a, b) => a.stanzaNumber - b.stanzaNumber) : [];
 
-        // Sort refrains by refrainNumber if multiple exist
         const sortedRefrains = hymn.refrains ?
             Object.values(hymn.refrains).sort((a, b) => a.refrainNumber - b.refrainNumber) : [];
 
-        sortedStanzas.forEach((stanza, index) => {
-            // Add the stanza
+        sortedStanzas.forEach((stanza) => {
             content.push(
                 <View key={`stanza-${stanza.stanzaNumber}`} style={styles.stanzaContainer}>
                     {stanza.stanzaNumber !== 0 && <StanzaView stanza={stanza} fontSizes={fontSizes}/>}
-
                 </View>
             );
 
-            // Add refrain after each stanza
             if (sortedRefrains.length > 0) {
-                // Find refrain with matching refrainNumber to stanzaNumber
                 let refrainToUse = sortedRefrains.find(refrain => refrain.refrainNumber === stanza.stanzaNumber);
 
-                // If no matching refrain found, use the first refrain as fallback
                 if (!refrainToUse) {
                     refrainToUse = sortedRefrains[0];
                 }
@@ -73,6 +65,26 @@ const HymnContent = ({hymn}) => {
             padding: 20,
             paddingBottom: 40,
         },
+        hymnHeader: {
+            marginBottom: 20,
+            paddingBottom: 16,
+            borderBottomWidth: 2,
+            borderBottomColor: colors.header,
+        },
+        hymnTitle: {
+            fontSize: fontSizes.title + 2,
+            fontWeight: 'bold',
+            color: colors.text,
+            marginBottom: 8,
+            textAlign: 'center',
+        },
+        hymnNumber: {
+            fontSize: fontSizes.number,
+            color: colors.text,
+            textAlign: 'center',
+            fontWeight: '600',
+            marginBottom: 4,
+        },
         titleContainer: {
             flexDirection: "row",
             justifyContent: "space-between",
@@ -82,14 +94,7 @@ const HymnContent = ({hymn}) => {
             borderBottomColor: colors.border,
             paddingBottom: 8,
         },
-        title: {
-            fontSize: fontSizes.title,
-            fontWeight: 'bold',
-            textAlign: 'center',
-            marginBottom: 8,
-            color: colors.textSecondary,
-        },
-        hymnNumber: {
+        hymnNumberSmall: {
             fontSize: fontSizes.number,
             color: colors.textSecondary,
             marginBottom: 4,
@@ -112,7 +117,6 @@ const HymnContent = ({hymn}) => {
         },
     });
 
-
     return (
         <ScrollView
             style={styles.container}
@@ -120,22 +124,35 @@ const HymnContent = ({hymn}) => {
             contentContainerStyle={styles.scrollContent}
         >
             <View style={styles.content}>
-                {/* Hymn Title */}
-                {hymn.title && (
-                    <>
-                        <View style={styles.titleContainer}>
-                            {hymn.number && (
-                                <Text style={styles.hymnNumber}>Key: {hymn.doh}</Text>
-                            )}
-                            {hymn.origin && (
-                                <View style={styles.originContainer}>
-                                    <Text ellipsizeMode={'tail'} numberOfLines={1}
-                                          style={styles.origin}>{hymn.origin}</Text>
-                                </View>
-                            )}
-                        </View>
-                    </>
+                {/* Hymn Title Section - shown when showTitle is true */}
+                {showTitle && hymn.title && (
+                    <View style={styles.hymnHeader}>
+                        <Text style={styles.hymnNumber}>
+                            #{hymn.number}
+                        </Text>
+                        <Text style={styles.hymnTitle}>
+                            {hymn.title}
+                        </Text>
+                        {hymn.origin && (
+                            <Text style={styles.origin}>
+                                {hymn.origin}
+                            </Text>
+                        )}
+                    </View>
                 )}
+
+                {/* Key and Origin Info */}
+                <View style={styles.titleContainer}>
+                    {hymn.number && (
+                        <Text style={styles.hymnNumberSmall}>Key: {hymn.doh}</Text>
+                    )}
+                    {!showTitle && hymn.origin && (
+                        <View style={styles.originContainer}>
+                            <Text ellipsizeMode={'tail'} numberOfLines={1}
+                                  style={styles.origin}>{hymn.origin}</Text>
+                        </View>
+                    )}
+                </View>
 
                 {/* Render hymn content */}
                 {renderHymnContent()}

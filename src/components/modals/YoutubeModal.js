@@ -12,23 +12,21 @@ const YouTubeModal = ({ visible, onClose, youtubeVideoId }) => {
     const { width, height } = useWindowDimensions();
     const isLandscape = width > height;
 
-    // Multiple ways to track PiP state for better reliability
+    // Tracker 1: Native PiP listener (from library)
     const pipActive = usePipModeListener();
+
+    // Tracker 2: Local state (from Player callback)
     const [localPipActive, setLocalPipActive] = useState(false);
     const [appState, setAppState] = useState(AppState.currentState);
 
-    // Track app state changes (useful for detecting PiP on some devices)
+    // Track app state to reset PiP when returning to foreground
     useEffect(() => {
         const handleAppStateChange = (nextAppState) => {
             setAppState(nextAppState);
-            console.log('App state changed:', nextAppState, 'Local PiP:', localPipActive);
-
-            // Reset PiP state when app becomes active
+            // Reset local PiP state when app becomes active again
             if (nextAppState === 'active') {
-                // Small delay to ensure proper state reset
                 setTimeout(() => {
                     setLocalPipActive(false);
-                    console.log('Reset local PiP state to false');
                 }, 200);
             }
         };
@@ -37,32 +35,28 @@ const YouTubeModal = ({ visible, onClose, youtubeVideoId }) => {
         return () => subscription?.remove();
     }, []);
 
-    // Set up PiP change callback on the player
+    // LISTEN TO PLAYER STATE
+    // This is the reliable way to know when to hide buttons
     useEffect(() => {
         if (playerRef.current && visible) {
             playerRef.current.setOnPipChange?.((pipState) => {
-                console.log('Player PiP callback:', pipState);
                 setLocalPipActive(pipState);
             });
         }
     }, [playerRef.current, visible]);
 
-    // Reset PiP state when modal becomes visible
+    // Reset state when modal opens
     useEffect(() => {
         if (visible) {
             setLocalPipActive(false);
-            // Also reset the player's PiP state
+            // Reset player internal state
             setTimeout(() => {
                 playerRef.current?.resetPipState?.();
             }, 100);
-            console.log('Modal opened, reset PiP state');
         }
     }, [visible]);
 
-    // Combined PiP state - true if either detection method indicates PiP is active
     const isPipModeActive = pipActive || localPipActive;
-
-    console.log('Render state - pipActive:', pipActive, 'localPipActive:', localPipActive, 'isPipModeActive:', isPipModeActive);
 
     const styles = StyleSheet.create({
         youtubeModal: {
@@ -82,10 +76,10 @@ const YouTubeModal = ({ visible, onClose, youtubeVideoId }) => {
             overflow: 'hidden',
             backgroundColor: '#000'
         },
-        closeButtonContainer: {
+        // Buttons are positioned absolutely
+        buttonContainer: {
             position: 'absolute',
             top: Platform.OS === 'ios' ? 60 : 40,
-            right: 20,
             zIndex: 1000,
             backgroundColor: colors.primary,
             borderRadius: 25,
@@ -99,32 +93,18 @@ const YouTubeModal = ({ visible, onClose, youtubeVideoId }) => {
             shadowRadius: 3.84,
             elevation: 5,
         },
-        pipButtonContainer: {
-            position: 'absolute',
-            top: Platform.OS === 'ios' ? 60 : 40,
-            left: 20,
-            zIndex: 1000,
-            backgroundColor: colors.primary,
-            borderRadius: 25,
-            width: 50,
-            height: 50,
-            justifyContent: 'center',
-            alignItems: 'center',
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.25,
-            shadowRadius: 3.84,
-            elevation: 5,
-        },
+        closePos: { right: 20 },
+        pipPos: { left: 20 },
     });
 
     if (!youtubeVideoId) return null;
 
     const handlePipPress = async () => {
         try {
+            // FIX: Don't set state manually here.
+            // Let the Player callback trigger setLocalPipActive(true)
+            // This prevents buttons from vanishing if PiP fails/waits.
             await playerRef.current?.enterPiP();
-            // Manually set local PiP state as backup
-            setTimeout(() => setLocalPipActive(true), 100);
         } catch (error) {
             console.error('Failed to enter PiP mode:', error);
         }
@@ -142,7 +122,7 @@ const YouTubeModal = ({ visible, onClose, youtubeVideoId }) => {
                 {!isPipModeActive && (
                     <>
                         {/* Close Button */}
-                        <View style={styles.closeButtonContainer}>
+                        <View style={[styles.buttonContainer, styles.closePos]}>
                             <FloatingButton
                                 name="close"
                                 size={24}
@@ -153,7 +133,7 @@ const YouTubeModal = ({ visible, onClose, youtubeVideoId }) => {
 
                         {/* PiP Button - Android only */}
                         {Platform.OS === 'android' && (
-                            <View style={styles.pipButtonContainer}>
+                            <View style={[styles.buttonContainer, styles.pipPos]}>
                                 <FloatingButton onPress={handlePipPress}>
                                     <MaterialIcons
                                         name="picture-in-picture"

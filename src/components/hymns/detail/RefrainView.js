@@ -1,11 +1,11 @@
-import React from 'react';
+import React, {useMemo} from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import {useTheme} from "../../../context/ThemeContext";
 
 const RefrainView = ({ refrain, fontSizes }) => {
     const colors = useTheme().theme.colors;
 
-    const styles = StyleSheet.create({
+    const styles = useMemo(() => StyleSheet.create({
         container: {
             marginBottom: 24,
             alignItems: 'center',
@@ -26,7 +26,7 @@ const RefrainView = ({ refrain, fontSizes }) => {
             color: colors.textSecondary,
             fontStyle: 'italic',
         },
-    });
+    }), [colors, fontSizes]);
 
     return (
         <View style={styles.container}>
@@ -37,4 +37,4 @@ const RefrainView = ({ refrain, fontSizes }) => {
 };
 
 
-export default RefrainView;
+export default React.memo(RefrainView);

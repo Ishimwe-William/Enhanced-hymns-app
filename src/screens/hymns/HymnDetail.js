@@ -25,7 +25,6 @@ const HymnDetail = () => {
     const pagerRef = useRef(null);
     const viewShotRef = useRef(null);
 
-    // Optimized hook handles the "Current" hymn logic for us
     const {
         hymnPages,
         currentHymn,
@@ -91,27 +90,30 @@ const HymnDetail = () => {
         />
     );
 
-    // 1. DYNAMIC HEADER TITLE
-    // Updates instantly as you slide because currentHymn updates instantly
+    // Dynamic header title
     const headerTitle = currentHymn
         ? `${currentHymn.number} - ${currentHymn.title}`
         : "Loading...";
 
+    // 1. Initial full-screen load
     if (loading) {
         return <LoadingScreen message="Loading hymn..."/>;
     }
 
-    if (error || !currentHymn) {
+    // 2. Explicit Error State (Only if the API actually failed)
+    if (error) {
         return (
             <View style={styles.container}>
-                <Header
-                    title="Error"
-                    showBack
-                    onBack={handleBack}
-                />
-                <WarningBanner message={error || "Failed to load hymn"}/>
+                <Header title="Error" showBack onBack={handleBack} />
+                <WarningBanner message={error} />
             </View>
         );
+    }
+
+    // 3. Race Condition Loading State (Fix for "Failed to load hymn" on fast swipe)
+    // If we have no error, but also no hymn data yet, we are simply waiting for the fetch.
+    if (!currentHymn) {
+        return <LoadingScreen message="Loading..." />;
     }
 
     return (
@@ -135,7 +137,7 @@ const HymnDetail = () => {
                         {hymn ? (
                             <HymnContent
                                 hymn={hymn}
-                                showTitle={false} // Hidden here since it's in the Header now
+                                showTitle={false}
                             />
                         ) : (
                             <View style={styles.page} />
@@ -144,7 +146,6 @@ const HymnDetail = () => {
                 ))}
             </PagerView>
 
-            {/* Controls detached from pager - always visible and reactive */}
             <View style={styles.controlsContainer}>
                 <HymnControls
                     hymn={currentHymn}

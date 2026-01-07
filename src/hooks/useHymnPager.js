@@ -51,22 +51,25 @@ const useHymnPager = (initialHymnId, hymns, loadHymnDetails) => {
             const oldNext = hymnPages[2];    // Becomes Current (TARGET)
 
             // 1. INSTANT UPDATE:
-            // set oldNext as Current immediately so controls update NOW.
-            // Leave the 3rd slot (Next) null for now.
             setHymnPages([oldCurrent, oldNext, null]);
             setCurrentIndex(newIndex);
 
             // 2. SNAP PAGER BACK:
-            // Reset the pager view to center silently
             requestAnimationFrame(() => {
                 pagerRef.current?.setPageWithoutAnimation(1);
             });
 
-            // 3. BACKGROUND FETCH:
-            // Go get the *new* next hymn quietly. The user won't notice the wait.
+            // 3. RECOVERY FETCH (The Fix):
+            // If the page we landed on (oldNext) was empty/null, fetch it now.
+            if (!oldNext) {
+                loadHymnDetails(hymns[newIndex].id).then(currData => {
+                    setHymnPages(prev => [prev[0], currData, prev[2]]);
+                });
+            }
+
+            // 4. PRELOAD NEXT NEIGHBOR:
             if (newIndex < hymns.length - 1) {
                 loadHymnDetails(hymns[newIndex + 1].id).then(newNextData => {
-                    // Update the state again only when data arrives
                     setHymnPages(prev => [prev[0], prev[1], newNextData]);
                 });
             }
@@ -90,7 +93,15 @@ const useHymnPager = (initialHymnId, hymns, loadHymnDetails) => {
                 pagerRef.current?.setPageWithoutAnimation(1);
             });
 
-            // 3. BACKGROUND FETCH
+            // 3. RECOVERY FETCH (The Fix):
+            // If the page we landed on (oldPrev) was empty/null, fetch it now.
+            if (!oldPrev) {
+                loadHymnDetails(hymns[newIndex].id).then(currData => {
+                    setHymnPages(prev => [prev[0], currData, prev[2]]);
+                });
+            }
+
+            // 4. PRELOAD PREVIOUS NEIGHBOR:
             if (newIndex > 0) {
                 loadHymnDetails(hymns[newIndex - 1].id).then(newPrevData => {
                     setHymnPages(prev => [newPrevData, prev[1], prev[2]]);

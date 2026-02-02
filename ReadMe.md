@@ -1,6 +1,6 @@
-# Hymns App
+# 500 Kinyarwanda Hymns
 
-**Hymns App** is a mobile application designed to provide users with a seamless experience for browsing, searching, and favoriting hymns from various collections. The app is built with user privacy and data protection as top priorities.
+**500 Kinyarwanda Hymns** is a mobile application designed to provide users with a seamless experience for browsing, searching, and favoriting hymns from various collections. The app is built with user privacy and data protection as top priorities.
 
 ---
 
@@ -38,7 +38,7 @@
 
 ## 🔐 Data Privacy and Protection
 
-At Hymns App, we are committed to protecting your privacy and ensuring the security of your data. Below is an overview of our data practices and your rights regarding personal information.
+At 500 Kinyarwanda Hymns, we are committed to protecting your privacy and ensuring the security of your data. Below is an overview of our data practices and your rights regarding personal information.
 
 ### 📥 Data Collection
 
@@ -113,7 +113,7 @@ To permanently delete your data:
 
 ## ✅ Compliance
 
-Hymns App complies with the **General Data Protection Regulation (GDPR)** and other applicable data protection laws. We are committed to upholding the highest standards of privacy and security.
+500 Kinyarwanda Hymns complies with the **General Data Protection Regulation (GDPR)** and other applicable data protection laws. We are committed to upholding the highest standards of privacy and security.
 
 ---
 
@@ -125,4 +125,6 @@ If you have any questions or concerns about our data practices, please reach out
 
 ---
 
-Thank you for using **Hymns App**!
+Thank you for using **500 Kinyarwanda Hymns**!
+
+Developer: BunsenPlus

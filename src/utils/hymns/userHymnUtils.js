@@ -49,7 +49,7 @@ export const loadUserData = async (userId, syncFavorites, isOffline, setFavorite
                         await saveRecentToCloud(userId, uniqueRecent);
                     }
                 } catch (syncError) {
-                    console.log('Cloud sync failed, using local data:', syncError.message);
+                    console.error('Cloud sync failed, using local data:', syncError.message);
                 }
             }
         } else {
@@ -69,7 +69,7 @@ export const saveFavoritesHandler = async (userId, favoritesData, syncFavorites,
                 try {
                     await saveFavoritesToCloud(userId, favoritesData);
                 } catch (cloudError) {
-                    console.log('Cloud sync failed for favorites, saved locally');
+                    console.error('Cloud sync failed for favorites, saved locally');
                 }
             }
         }
@@ -86,7 +86,7 @@ export const saveRecentHymnsHandler = async (userId, recentData, syncFavorites, 
                 try {
                     await saveRecentToCloud(userId, recentData);
                 } catch (cloudError) {
-                    console.log('Cloud sync failed for recent hymns, saved locally');
+                    console.error('Cloud sync failed for recent hymns, saved locally');
                 }
             }
         }

@@ -20,6 +20,9 @@ const HymnsList = () => {
     const [localHymnCount, setLocalHymnCount] = useState(0);
     const isFocused = useIsFocused();
 
+    // NEW: State for view mode
+    const [viewMode, setViewMode] = useState('list'); // 'list' or 'grid'
+
     useEffect(() => {
         loadLocalHymnCount();
     }, [isFocused, getLocalHymnCount,]);
@@ -45,7 +48,6 @@ const HymnsList = () => {
             navigation.navigate('HymnDetail', {hymnId});
         } catch (error) {
             console.error('Error navigating to hymn detail:', error);
-            // Optionally show an alert or toast to inform the user
         }
     };
 
@@ -56,6 +58,11 @@ const HymnsList = () => {
                 onPress: () => navigation.navigate("Settings")
             }],
         );
+    };
+
+    // NEW: Toggle handler
+    const toggleViewMode = () => {
+        setViewMode(prev => prev === 'list' ? 'grid' : 'list');
     };
 
     const refreshHymns = async () => {
@@ -82,39 +89,59 @@ const HymnsList = () => {
                 onMenu={handleMenuPress}
                 onRefresh={refreshHymns}
                 showMore={false}
-            />{loading ? (
-            <LoadingScreen message="Loading hymns..."/>
-        ) : (
-            <>
-                <View style={styles.searchContainer}>
-                    <View style={styles.searchBar}>
-                        <SearchBar
-                            value={searchQuery}
-                            onChangeText={setSearchQuery}
-                            placeholder="Search hymns..."
-                        />
-                    </View>
-                    {localHymnCount === 0 && (
+            />
+            {loading ? (
+                <LoadingScreen message="Loading hymns..."/>
+            ) : (
+                <>
+                    <View style={styles.searchContainer}>
+                        <View style={styles.searchBar}>
+                            <SearchBar
+                                value={searchQuery}
+                                onChangeText={setSearchQuery}
+                                placeholder="Search hymns..."
+                            />
+                        </View>
+
+                        {/* NEW: View Mode Toggle Button */}
                         <Pressable
-                            style={styles.downloadButton}
+                            style={styles.iconButton}
                             android_ripple={{color: colors.textSecondary, borderless: true}}
-                            onPress={downloadAllHymns}
+                            onPress={toggleViewMode}
                         >
                             <Ionicons
-                                name={"cloud-download-outline"}
+                                name={viewMode === 'list' ? "grid-outline" : "list-outline"}
                                 size={24}
                                 color={colors.header}
                             />
                         </Pressable>
+
+                        {localHymnCount === 0 && (
+                            <Pressable
+                                style={styles.iconButton}
+                                android_ripple={{color: colors.textSecondary, borderless: true}}
+                                onPress={downloadAllHymns}
+                            >
+                                <Ionicons
+                                    name={"cloud-download-outline"}
+                                    size={24}
+                                    color={colors.header}
+                                />
+                            </Pressable>
+                        )}
+                    </View>
+
+                    {filteredHymns.length === 0 ? (
+                        <EmptyHymnList/>
+                    ) : (
+                        <HymnListView
+                            hymns={filteredHymns}
+                            onHymnSelect={handleHymnSelect}
+                            viewMode={viewMode} // Pass the state down
+                        />
                     )}
-                </View>
-                {filteredHymns.length === 0 ? (
-                    <EmptyHymnList/>
-                ) : (
-                    <HymnListView hymns={filteredHymns} onHymnSelect={handleHymnSelect}/>
-                )}
-            </>
-        )}
+                </>
+            )}
         </View>
     );
 };
@@ -125,16 +152,18 @@ const styles = StyleSheet.create({
     },
     searchContainer: {
         flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-around',
+        //alignItems: 'center',
+        marginRight: 10, // Added padding for the icons on the right
     },
     searchBar: {
         flex: 1,
     },
-    downloadButton: {
-        alignItems: 'flex-start',
-        marginLeft: 10,
-        marginRight: "8%",
+    // Updated generic style for both buttons
+    iconButton: {
+        paddingHorizontal: 8,
+        marginLeft: 4,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
 });
 

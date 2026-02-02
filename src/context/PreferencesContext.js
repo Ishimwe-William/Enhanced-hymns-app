@@ -155,7 +155,7 @@ export const PreferencesProvider = ({ children }) => {
                     try {
                         await savePreferencesToCloud(user.uid, newPreferences);
                     } catch (cloudError) {
-                        console.log('Cloud sync failed, preferences saved locally:', cloudError.message);
+                        console.error('Cloud sync failed, preferences saved locally:', cloudError.message);
                     }
                 }
             }

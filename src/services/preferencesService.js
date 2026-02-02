@@ -10,7 +10,6 @@ export const savePreferencesToCloud = async (userId, preferences) => {
             lastUpdated: serverTimestamp(),
             userId,
         }, { merge: true });
-        console.log('Preferences saved to cloud successfully');
         return true;
     } catch (error) {
         console.error('Error saving preferences to cloud:', error);
@@ -25,10 +24,8 @@ export const loadPreferencesFromCloud = async (userId) => {
         const docSnap = await getDoc(userPrefsRef);
 
         if (docSnap.exists()) {
-            console.log('Preferences loaded from cloud successfully');
             return docSnap.data().preferences;
         }
-        console.log('No cloud preferences found for user');
         return null;
     } catch (error) {
         console.error('Error loading preferences from cloud:', error);
@@ -45,13 +42,11 @@ export const syncPreferences = async (userId, localPreferences) => {
         if (!cloudPreferences) {
             // No cloud preferences, save local ones
             await savePreferencesToCloud(userId, localPreferences);
-            console.log('Local preferences synced to cloud');
             return localPreferences;
         }
 
         // Here you could implement conflict resolution logic
         // For now, we'll use cloud preferences if they exist
-        console.log('Using cloud preferences');
         return cloudPreferences;
     } catch (error) {
         console.error('Error syncing preferences:', error);
@@ -69,7 +64,6 @@ export const saveFavoritesToCloud = async (userId, favorites) => {
             lastUpdated: serverTimestamp(),
             userId,
         }, { merge: true });
-        console.log('Favorites saved to cloud successfully');
         return true;
     } catch (error) {
         console.error('Error saving favorites to cloud:', error);
@@ -85,10 +79,8 @@ export const loadFavoritesFromCloud = async (userId) => {
         const docSnap = await getDoc(userFavoritesRef);
 
         if (docSnap.exists()) {
-            console.log('Favorites loaded from cloud successfully');
             return docSnap.data().favorites || [];
         }
-        console.log('No cloud favorites found for user');
         return [];
     } catch (error) {
         console.error('Error loading favorites from cloud:', error);
@@ -106,7 +98,6 @@ export const saveRecentToCloud = async (userId, recentHymns) => {
             lastUpdated: serverTimestamp(),
             userId,
         }, { merge: true });
-        console.log('Recent hymns saved to cloud successfully');
         return true;
     } catch (error) {
         console.error('Error saving recent hymns to cloud:', error);
@@ -122,10 +113,8 @@ export const loadRecentFromCloud = async (userId) => {
         const docSnap = await getDoc(userRecentRef);
 
         if (docSnap.exists()) {
-            console.log('Recent hymns loaded from cloud successfully');
             return docSnap.data().recentHymns || [];
         }
-        console.log('No cloud recent hymns found for user');
         return [];
     } catch (error) {
         console.error('Error loading recent hymns from cloud:', error);

@@ -38,7 +38,6 @@ export const fetchUpdatedHymns = async (since) => {
     try {
             const isConnected = await checkNetworkConnection();
         if (!isConnected) {
-            console.log('No internet connection for sync');
             return [];
         }
 
@@ -74,13 +73,10 @@ export const fetchUpdatedHymns = async (since) => {
 };
 export const fetchHymnDetails = async (hymnId) => {
     try {
-        console.log('Fetching hymn details for ID:', hymnId);
-
         // Check network connectivity first
             const isConnected = await checkNetworkConnection();
 
         if (!isConnected) {
-            console.log('No internet connection, fetching from local storage');
             const localHymn = await fetchHymnById(hymnId);
 
             if (localHymn) {
@@ -101,7 +97,6 @@ export const fetchHymnDetails = async (hymnId) => {
                 };
             } else {
                 // If not found on Firebase, check local storage as fallback
-                console.log('Hymn not found on Firebase, checking local storage');
                 const localHymn = await fetchHymnById(hymnId);
 
                 if (localHymn) {
@@ -111,13 +106,10 @@ export const fetchHymnDetails = async (hymnId) => {
                 }
             }
         } catch (firebaseError) {
-            console.log('Firebase fetch failed, trying local storage:', firebaseError.message);
-
             // If Firebase fails but we have internet, still try local storage
             const localHymn = await fetchHymnById(hymnId);
 
             if (localHymn) {
-                console.log('Found hymn in local storage');
                 return localHymn;
             } else {
                 throw firebaseError; // Re-throw original Firebase error
@@ -151,8 +143,6 @@ export const updateHymnData = async (hymnId, hymnData) => {
         };
 
         await updateDoc(hymnDoc, updateData);
-
-        console.log('Hymn updated successfully');
         return true;
     } catch (error) {
         console.error('Error updating hymn:', error);

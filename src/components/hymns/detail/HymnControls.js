@@ -1,4 +1,4 @@
-import React, {useState, useRef, useMemo} from 'react';
+import React, {useState, useRef, useMemo, useEffect} from 'react';
 import {
     View,
     StyleSheet,
@@ -24,8 +24,35 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare, disabled}) => {
     const rotateAnim = useRef(new Animated.Value(0)).current;
     const audioPlayerRef = useRef(null);
     const { preferences, updatePreference } = usePreferences();
+    const currentHymnIdRef = useRef(null);
 
     const {colors} = useTheme().theme;
+
+    // CRITICAL FIX: Reset audio player when hymn changes
+    useEffect(() => {
+        const hymnId = hymn?.firebaseId || hymn?.id || hymn?.number;
+
+        if (currentHymnIdRef.current !== null && currentHymnIdRef.current !== hymnId) {
+            // Hymn changed - close audio player and stop playback
+            if (showAudioPlayer) {
+                setShowAudioPlayer(false);
+                setIsPlaying(false);
+
+                Animated.timing(audioPlayerWidth, {
+                    toValue: 0,
+                    duration: 200,
+                    useNativeDriver: false,
+                }).start();
+
+                // Stop the audio
+                if (audioPlayerRef.current) {
+                    audioPlayerRef.current.handleStop();
+                }
+            }
+        }
+
+        currentHymnIdRef.current = hymnId;
+    }, [hymn?.firebaseId, hymn?.id, hymn?.number, showAudioPlayer]);
 
     const styles = useMemo(() => StyleSheet.create({
         container: {
@@ -145,12 +172,10 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare, disabled}) => {
             return;
         }
 
-        // Show audio player if not visible
         if (!showAudioPlayer) {
             toggleAudioPlayer();
         }
 
-        // Call the audio player's play/pause method
         if (audioPlayerRef.current) {
             await audioPlayerRef.current.handlePlayPause();
         }
@@ -190,7 +215,6 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare, disabled}) => {
             return;
         }
 
-        // Close audio player if it's open
         if (showAudioPlayer && audioPlayerRef.current) {
             audioPlayerRef.current.handleStop();
             setShowAudioPlayer(false);
@@ -208,12 +232,10 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare, disabled}) => {
         setShowYouTubePlayer(false);
     };
 
-    // Handle playing state updates from AudioTrackerPlayer
     const handlePlayingStateChange = (playing) => {
         setIsPlaying(playing);
     };
 
-    // Interpolate animations
     const expandedHeight = animatedHeight.interpolate({
         inputRange: [0, 1],
         outputRange: [0, 60],
@@ -271,14 +293,12 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare, disabled}) => {
 
     return (
         <View style={styles.container}>
-            {/* YouTube Player Modal - Now separated */}
             <YouTubeModal
                 visible={showYouTubePlayer}
                 onClose={closeYouTubePlayer}
                 youtubeVideoId={hymn?.youtube}
             />
 
-            {/* Expanded Controls */}
             <Animated.View
                 style={[styles.expandedContainer, {height: expandedHeight}]}
             >
@@ -297,19 +317,18 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare, disabled}) => {
                 </View>
             </Animated.View>
 
-            {/* Bottom Row: Audio Player and Always Visible Controls */}
             <View style={styles.bottomRow}>
                 <Animated.View
                     style={[styles.audioPlayerContainer, {width: playerWidth}]}
                 >
                     <AudioTrackerPlayer
+                        key={hymn?.firebaseId || hymn?.id}
                         ref={audioPlayerRef}
                         hymn={hymn}
                         onPlayingStateChange={handlePlayingStateChange}
                     />
                 </Animated.View>
 
-                {/* Always Visible Controls - on the right side */}
                 <View style={styles.alwaysVisibleContainer}>
                     {hymn?.audioUrl && (
                         <>
@@ -340,7 +359,6 @@ const HymnControls = ({hymn, onNext, onPrevious, onShare, disabled}) => {
                         </>
                     )}
 
-                    {/* YouTube Play Button - Only show if YouTube video is available */}
                     {hymn?.youtube && (
                         <View style={[
                             styles.playButtonContainer,

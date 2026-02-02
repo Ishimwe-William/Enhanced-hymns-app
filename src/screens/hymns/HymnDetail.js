@@ -19,11 +19,30 @@ const HymnDetail = () => {
     const route = useRoute();
     const initialHymnId = route.params?.hymnId;
 
-    const {hymns, loadHymnDetails} = useHymns();
+    const {hymns, loadHymnDetails, loadAndTrackHymn} = useHymns();
     const {colors} = useTheme().theme;
 
     const pagerRef = useRef(null);
     const viewShotRef = useRef(null);
+
+    // Track if we've recorded the initial hymn
+    const trackedInitialRef = useRef(false);
+
+    // Wrapper that tracks only the initial hymn
+    const loadHymnDetailsWrapper = React.useCallback((hymnId) => {
+        return new Promise((resolve) => {
+            // If this is the initial hymn and we haven't tracked it yet, use loadAndTrackHymn
+            if (!trackedInitialRef.current && hymnId === initialHymnId) {
+                trackedInitialRef.current = true;
+                loadAndTrackHymn(hymnId);
+                // Still need to resolve with the hymn data
+                loadHymnDetails(hymnId, (hymn) => resolve(hymn));
+            } else {
+                // For all other hymns (neighbors), just load without tracking
+                loadHymnDetails(hymnId, (hymn) => resolve(hymn));
+            }
+        });
+    }, [initialHymnId, loadAndTrackHymn, loadHymnDetails]);
 
     const {
         hymnPages,
@@ -33,7 +52,7 @@ const HymnDetail = () => {
         canGoNext,
         canGoPrevious,
         handlePageChange,
-    } = useHymnPager(initialHymnId, hymns, loadHymnDetails);
+    } = useHymnPager(initialHymnId, hymns, loadHymnDetailsWrapper);
 
     const [isCapturing, setIsCapturing] = React.useState(false);
 
@@ -90,17 +109,14 @@ const HymnDetail = () => {
         />
     );
 
-    // Dynamic header title
     const headerTitle = currentHymn
         ? `${currentHymn.number} - ${currentHymn.title}`
         : "Loading...";
 
-    // 1. Initial full-screen load
     if (loading) {
         return <LoadingScreen message="Loading hymn..."/>;
     }
 
-    // 2. Explicit Error State (Only if the API actually failed)
     if (error) {
         return (
             <View style={styles.container}>
@@ -110,8 +126,6 @@ const HymnDetail = () => {
         );
     }
 
-    // 3. Race Condition Loading State (Fix for "Failed to load hymn" on fast swipe)
-    // If we have no error, but also no hymn data yet, we are simply waiting for the fetch.
     if (!currentHymn) {
         return <LoadingScreen message="Loading..." />;
     }

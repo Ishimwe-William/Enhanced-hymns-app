@@ -10,12 +10,12 @@ import {
   forceSync, syncHymns,
 } from '../utils/hymns/hymnUtils';
 import {
-    toggleFavorite,
-    addToRecent,
-    clearRecentHymns,
-    clearFavorites,
-    clearUserData,
-    isFavorite, loadUserData,
+  toggleFavorite,
+  addToRecent,
+  clearRecentHymns,
+  clearFavorites,
+  clearUserData,
+  isFavorite, loadUserData,
 } from '../utils/hymns/userHymnUtils';
 import { getFilteredHymns, getHymnDisplaySettings } from '../utils/hymns/hymnDisplayUtils';
 
@@ -68,7 +68,17 @@ export const HymnProvider = ({ children, dbInitialized }) => {
     isOnWifi,
     syncHymns: () => syncHymns(true, setSyncing, setHymns, preferences.offlineDownload, isOffline),
     loadHymns: () => loadHymns(setHymns, setLoading, isOffline, preferences.offlineDownload),
-    loadHymnDetails: (hymnId) => loadHymnDetails(hymnId, isOffline, (hymn) => addToRecent(hymn, recentHymns, setRecentHymns, user?.uid, preferences.syncFavorites, isOffline)),
+
+    // CRITICAL FIX: loadHymnDetails without callback (for non-tracking loads)
+    loadHymnDetails: (hymnId, callback) => loadHymnDetails(hymnId, isOffline, callback),
+
+    // CRITICAL FIX: loadAndTrackHymn explicitly adds to recent
+    loadAndTrackHymn: (hymnId) => loadHymnDetails(hymnId, isOffline, (hymn) => {
+      if (hymn) {
+        addToRecent(hymn, recentHymns, setRecentHymns, user?.uid, preferences.syncFavorites, isOffline);
+      }
+    }),
+
     toggleFavorite: (hymn) => toggleFavorite(hymn, favorites, setFavorites, user?.uid, preferences.syncFavorites, isOffline),
     isFavorite: (hymnId) => isFavorite(hymnId, favorites),
     updateHymn: (firebaseId, hymnData) => updateHymn(firebaseId, hymnData, setHymns, isOffline),

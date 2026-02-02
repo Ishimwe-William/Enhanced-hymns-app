@@ -103,7 +103,7 @@ export const PreferencesProvider = ({ children }) => {
                                 }
                             }
                         } catch (err) {
-                            console.log('Sync failed, using local preferences:', err.message);
+                            console.error('Sync failed, using local preferences:', err.message);
                         } finally {
                             setSyncing(false);
                         }

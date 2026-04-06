@@ -1,392 +1,286 @@
-import React, {useState, useRef, useMemo, useEffect} from 'react';
-import {
-    View,
-    StyleSheet,
-    Alert,
-    Animated,
-} from 'react-native';
+import React, {useState, useRef, useMemo, useEffect, useCallback} from 'react';
+import {View, StyleSheet, Alert, Animated, useWindowDimensions} from 'react-native';
 import {useHymns} from '../../../context/HymnContext';
 import FloatingButton from '../../ui/FloatingButton';
 import {useTheme} from "../../../context/ThemeContext";
 import AudioTrackerPlayer from "../../audioPlayer/AudioTrackerPlayer";
-import YouTubeModal from "../../modals/YoutubeModal";
+import {ProgressBar} from "../../audioPlayer/ProgressBar";
 import {usePreferences} from "../../../context/PreferencesContext";
 
 const HymnControls = ({hymn, onNext, onPrevious, onShare, disabled}) => {
     const {toggleFavorite, isFavorite} = useHymns();
-    const [isExpanded, setIsExpanded] = useState(false);
+    const [showSecondary, setShowSecondary] = useState(false);
     const [showAudioPlayer, setShowAudioPlayer] = useState(false);
-    const [showYouTubePlayer, setShowYouTubePlayer] = useState(false);
     const [isPlaying, setIsPlaying] = useState(false);
+    const [progress, setProgress] = useState({position: 0, duration: 0, buffered: 0});
 
-    const animatedHeight = useRef(new Animated.Value(0)).current;
-    const audioPlayerWidth = useRef(new Animated.Value(0)).current;
-    const rotateAnim = useRef(new Animated.Value(0)).current;
+    const secondaryAnim = useRef(new Animated.Value(0)).current;
+    const audioAnim     = useRef(new Animated.Value(0)).current;
+    const rotateAnim    = useRef(new Animated.Value(0)).current;
     const audioPlayerRef = useRef(null);
-    const { preferences, updatePreference } = usePreferences();
+
+    const {preferences, updatePreference} = usePreferences();
     const currentHymnIdRef = useRef(null);
-
     const {colors} = useTheme().theme;
+    const {width} = useWindowDimensions();
 
-    // CRITICAL FIX: Reset audio player when hymn changes
-    useEffect(() => {
-        const hymnId = hymn?.firebaseId || hymn?.id || hymn?.number;
+    const isSmall  = width < 360;
+    const btnSize  = isSmall ? 34 : 38;
+    const iconSize = isSmall ? 16 : 18;
+    const rowPad   = isSmall ? 8 : 12;
+    const gap      = isSmall ? 4 : 6;
 
-        if (currentHymnIdRef.current !== null && currentHymnIdRef.current !== hymnId) {
-            // Hymn changed - close audio player and stop playback
-            if (showAudioPlayer) {
-                setShowAudioPlayer(false);
-                setIsPlaying(false);
+    // Stable progress callback — no re-render churn
+    const handleProgressChange = useCallback((p) => setProgress(p), []);
 
-                Animated.timing(audioPlayerWidth, {
-                    toValue: 0,
-                    duration: 200,
-                    useNativeDriver: false,
-                }).start();
-
-                // Stop the audio
-                if (audioPlayerRef.current) {
-                    audioPlayerRef.current.handleStop();
-                }
-            }
-        }
-
-        currentHymnIdRef.current = hymnId;
-    }, [hymn?.firebaseId, hymn?.id, hymn?.number, showAudioPlayer]);
 
     const styles = useMemo(() => StyleSheet.create({
-        container: {
-            backgroundColor: colors.primary,
-            borderTopWidth: 1,
-            borderTopColor: colors.border,
-            position: 'relative',
-        },
-        expandedContainer: {
-            overflow: 'hidden',
+        wrapper: {
             backgroundColor: colors.card,
+            borderTopWidth: StyleSheet.hairlineWidth,
+            borderTopColor: colors.border,
+            shadowColor: '#000',
+            shadowOffset: {width: 0, height: -2},
+            shadowOpacity: 0.07,
+            shadowRadius: 8,
+            elevation: 10,
         },
-        controlsGrid: {
+        // Pure clip container — no padding, no background, no nested overflow
+        audioClip: {
+            overflow: 'hidden',
+        },
+        audioStripInner: {
+            paddingHorizontal: rowPad,
+            paddingTop: 8,
+            paddingBottom: 6,
+            backgroundColor: colors.primary,
+        },
+        secondaryClip: {
+            overflow: 'hidden',
+        },
+        secondaryInner: {
             flexDirection: 'row',
             justifyContent: 'space-around',
             alignItems: 'center',
-            paddingHorizontal: 16,
-            paddingVertical: 12,
-        },
-        bottomRow: {
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            paddingHorizontal: 6,
-            paddingVertical: 4,
-            minHeight: 40,
-        },
-        alwaysVisibleContainer: {
-            flexDirection: 'row',
-            justifyContent: 'center',
-            flex: 1,
-            gap: 6,
-        },
-        playButtonContainer: {
-            marginHorizontal: 5,
-            alignItems: 'center',
-            justifyContent: 'center',
-            shadowColor: '#000',
-            shadowOffset: {
-                width: 0,
-                height: 1,
-            },
-            shadowOpacity: 0.1,
-            shadowRadius: 2,
-            elevation: 2,
-            borderWidth: 1,
-            borderRadius: 24,
-            borderColor: colors.textSecondary,
-            width: 38,
-            height: 38,
-        },
-        audioPlayerContainer: {
-            overflow: 'hidden',
-            borderRadius: 6,
-            marginRight: 4,
-        },
-        progressContainer: {
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            paddingHorizontal: 12,
-            paddingTop: 4,
+            paddingVertical: isSmall ? 7 : 9,
+            paddingHorizontal: rowPad,
             backgroundColor: colors.primary,
-            borderTopLeftRadius: 6,
-            borderTopRightRadius: 6,
+            borderBottomWidth: StyleSheet.hairlineWidth,
+            borderBottomColor: colors.border,
         },
-        chevronContainer: {
+        mainRow: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingHorizontal: rowPad,
+            paddingVertical: isSmall ? 6 : 8,
+            gap,
+        },
+        btn: {
+            width: btnSize,
+            height: btnSize,
+            borderRadius: btnSize / 2,
             alignItems: 'center',
             justifyContent: 'center',
         },
-    }), [colors]);
+        playBtn: {
+            backgroundColor: colors.header + '20',
+            borderWidth: 1.5,
+            borderColor: colors.header + '50',
+        },
+        stopBtn: {
+            backgroundColor: colors.danger + '15',
+            borderWidth: 1.5,
+            borderColor: colors.danger + '40',
+        },
+        noteBtn: {
+            backgroundColor: colors.primary,
+            borderWidth: 1.5,
+            borderColor: colors.border,
+        },
+        noteBtnActive: {
+            backgroundColor: colors.header + '20',
+            borderColor: colors.header + '60',
+        },
+        expandBtn: {
+            backgroundColor: colors.primary,
+            borderWidth: 1,
+            borderColor: colors.border,
+        },
+        expandBtnActive: {
+            backgroundColor: colors.header + '20',
+            borderColor: colors.header + '40',
+        },
+        spacer: {flex: 1},
+        faded: {opacity: 0.4},
+    }), [colors, isSmall, btnSize, rowPad, gap]);
 
+    const hasAudio       = !!hymn?.audioUrl;
     const isHymnFavorite = isFavorite(hymn?.id);
+    const progressPct    = progress.duration > 0 ? (progress.position / progress.duration) * 100 : 0;
 
-    const toggleExpand = () => {
+    // Animated heights — fixed targets, no nested overflow issues
+    const AUDIO_H     = 42; // 8 + 28 (bar) + 6
+    const SECONDARY_H = isSmall ? 50 : 56;
+
+    const audioHeight     = audioAnim.interpolate({inputRange: [0, 1], outputRange: [0, AUDIO_H]});
+    const secondaryHeight = secondaryAnim.interpolate({inputRange: [0, 1], outputRange: [0, SECONDARY_H]});
+    const chevronRotate   = rotateAnim.interpolate({inputRange: [0, 1], outputRange: ['0deg', '180deg']});
+
+    // Height animations must use timing — spring overshoots and causes double-clip effect
+    const slideHeight = (anim, toValue) =>
+        Animated.timing(anim, {toValue, duration: 240, useNativeDriver: false}).start();
+
+    const toggleSecondary = () => {
         if (disabled) return;
-
-        const toValue = isExpanded ? 0 : 1;
-
-        Animated.parallel([
-            Animated.timing(animatedHeight, {
-                toValue: toValue,
-                duration: 250,
-                useNativeDriver: false,
-            }),
-            Animated.timing(rotateAnim, {
-                toValue: toValue,
-                duration: 250,
-                useNativeDriver: true,
-            }),
-        ]).start();
-
-        setIsExpanded(!isExpanded);
+        const next = !showSecondary;
+        slideHeight(secondaryAnim, next ? 1 : 0);
+        Animated.timing(rotateAnim, {toValue: next ? 1 : 0, duration: 220, useNativeDriver: true}).start();
+        setShowSecondary(next);
     };
 
-    const toggleAudioPlayer = () => {
-        if (!hymn?.audioUrl || disabled) {
+    const openAudioStrip = () => {
+        if (!showAudioPlayer) {
+            slideHeight(audioAnim, 1);
+            setShowAudioPlayer(true);
+        }
+    };
+
+    const toggleAudioStrip = () => {
+        if (!hasAudio || disabled) {
             Alert.alert('No Audio', 'This hymn does not have an audio file available.');
             return;
         }
-
-        const toValue = showAudioPlayer ? 0 : 1;
-
-        Animated.timing(audioPlayerWidth, {
-            toValue: toValue,
-            duration: 250,
-            useNativeDriver: false,
-        }).start();
-
-        setShowAudioPlayer(!showAudioPlayer);
+        const next = !showAudioPlayer;
+        slideHeight(audioAnim, next ? 1 : 0);
+        setShowAudioPlayer(next);
     };
 
     const handlePlayPause = async () => {
-        if (!hymn?.audioUrl || disabled) {
+        if (!hasAudio || disabled) {
             Alert.alert('No Audio', 'This hymn does not have an audio file available.');
             return;
         }
-
-        if (!showAudioPlayer) {
-            toggleAudioPlayer();
-        }
-
-        if (audioPlayerRef.current) {
-            await audioPlayerRef.current.handlePlayPause();
-        }
-    };
-
-    const handleAudioPlay = () => {
-        if (disabled) return;
-        handlePlayPause();
+        openAudioStrip();
+        await audioPlayerRef.current?.handlePlayPause();
     };
 
     const handleStop = async () => {
         if (disabled) return;
-        if (audioPlayerRef.current) {
-            await audioPlayerRef.current.handleStop();
-        }
+        await audioPlayerRef.current?.handleStop();
+        setIsPlaying(false);
     };
 
-    const handleFavorite = () => {
-        if (hymn && !disabled) {
-            toggleFavorite(hymn);
-        }
-    };
+    const handleSeek = (seekTime) => audioPlayerRef.current?.handleSeek(seekTime);
 
-    const handleFont = () => {
-        if (!disabled) {
-            const sizes = ['small', 'medium', 'large', 'xlarge'];
-            const currentIndex = sizes.indexOf(preferences.fontSize);
-            const nextIndex = (currentIndex + 1) % sizes.length;
-            updatePreference('fontSize', sizes[nextIndex]);
-        }
-    };
-
-    const handleYoutube = () => {
-        if (disabled) return;
-        if (!hymn?.youtube) {
-            Alert.alert('No YouTube Video', 'This hymn does not have a YouTube video available.');
-            return;
-        }
-
-        if (showAudioPlayer && audioPlayerRef.current) {
-            audioPlayerRef.current.handleStop();
-            setShowAudioPlayer(false);
-            Animated.timing(audioPlayerWidth, {
-                toValue: 0,
-                duration: 250,
-                useNativeDriver: false,
-            }).start();
-        }
-
-        setShowYouTubePlayer(true);
-    };
-
-    const closeYouTubePlayer = () => {
-        setShowYouTubePlayer(false);
-    };
-
-    const handlePlayingStateChange = (playing) => {
-        setIsPlaying(playing);
-    };
-
-    const expandedHeight = animatedHeight.interpolate({
-        inputRange: [0, 1],
-        outputRange: [0, 60],
-    });
-
-    const playerWidth = audioPlayerWidth.interpolate({
-        inputRange: [0, 1],
-        outputRange: ['0%', '45%'],
-    });
-
-    const controlButtons = [
-        {
-            name: 'chevron-back-outline',
-            size: 24,
-            color: disabled ? colors.textSecondary : colors.text,
-            onPress: disabled ? null : onPrevious,
-            label: 'Previous',
-        },
-        {
-            name: 'text-outline',
-            size: 24,
-            color: disabled ? colors.textSecondary : colors.text,
-            onPress: disabled ? null : handleFont,
-            label: 'Font',
-        },
-        {
-            name: 'logo-youtube',
-            size: 24,
-            color: disabled ? colors.textSecondary : (hymn?.youtube ? colors.danger : colors.textSecondary),
-            onPress: disabled ? null : handleYoutube,
-            label: 'YouTube',
-        },
-        {
-            name: isHymnFavorite ? 'heart' : 'heart-outline',
-            size: 24,
-            color: disabled ? colors.textSecondary : (isHymnFavorite ? colors.danger : colors.text),
-            onPress: disabled ? null : handleFavorite,
-            label: 'Favorite',
-        },
-        {
-            name: 'share-social-outline',
-            size: 24,
-            color: disabled ? colors.textSecondary : colors.text,
-            onPress: disabled ? null : onShare,
-            label: 'Share',
-        },
-        {
-            name: 'chevron-forward-outline',
-            size: 24,
-            color: disabled ? colors.textSecondary : colors.text,
-            onPress: disabled ? null : onNext,
-            label: 'Next',
-        },
+    const secondaryButtons = [
+        {name: 'chevron-back',
+            color: colors.text, onPress: onPrevious},
+        {name: 'text-outline',
+            color: colors.text, onPress: () => {
+                if (disabled) return;
+                const sizes = ['small', 'medium', 'large', 'xlarge'];
+                updatePreference('fontSize', sizes[(sizes.indexOf(preferences.fontSize) + 1) % sizes.length]);
+            }},
+        {name: isHymnFavorite ? 'heart' : 'heart-outline',
+            color: isHymnFavorite ? colors.danger : colors.text,
+            onPress: () => hymn && !disabled && toggleFavorite(hymn)},
+        {name: 'share-social-outline',
+            color: colors.text, onPress: onShare},
+        {name: 'chevron-forward',
+            color: colors.text, onPress: onNext},
     ];
 
     return (
-        <View style={styles.container}>
-            <YouTubeModal
-                visible={showYouTubePlayer}
-                onClose={closeYouTubePlayer}
-                youtubeVideoId={hymn?.youtube}
+        <View style={styles.wrapper}>
+            {/* Headless player — always mounted, no UI */}
+            <AudioTrackerPlayer
+                key={hymn?.firebaseId || hymn?.id}
+                ref={audioPlayerRef}
+                hymn={hymn}
+                onPlayingStateChange={setIsPlaying}
+                onProgressChange={handleProgressChange}
             />
 
-            <Animated.View
-                style={[styles.expandedContainer, {height: expandedHeight}]}
-            >
-                <View style={styles.controlsGrid}>
-                    {controlButtons.map((button, index) => (
+            {/* ── Progress bar strip ── pure clip, ProgressBar rendered flat inside */}
+            <Animated.View style={[styles.audioClip, {height: audioHeight}]}>
+                <View style={styles.audioStripInner}>
+                    <ProgressBar
+                        progress={progress}
+                        progressPercentage={progressPct}
+                        onSeek={handleSeek}
+                        disabled={false}
+                    />
+                </View>
+            </Animated.View>
+
+            {/* ── Secondary nav row ── */}
+            <Animated.View style={[styles.secondaryClip, {height: secondaryHeight}]}>
+                <View style={styles.secondaryInner}>
+                    {secondaryButtons.map((btn, i) => (
                         <FloatingButton
-                            key={index}
-                            name={button.name}
-                            size={button.size}
-                            color={button.color}
-                            onPress={button.onPress}
+                            key={i}
+                            name={btn.name}
+                            size={iconSize}
+                            color={disabled ? colors.textSecondary : btn.color}
+                            onPress={disabled ? null : btn.onPress}
                             disabled={disabled}
-                            compact={false}
                         />
                     ))}
                 </View>
             </Animated.View>
 
-            <View style={styles.bottomRow}>
-                <Animated.View
-                    style={[styles.audioPlayerContainer, {width: playerWidth}]}
-                >
-                    <AudioTrackerPlayer
-                        key={hymn?.firebaseId || hymn?.id}
-                        ref={audioPlayerRef}
-                        hymn={hymn}
-                        onPlayingStateChange={handlePlayingStateChange}
-                    />
-                </Animated.View>
-
-                <View style={styles.alwaysVisibleContainer}>
-                    {hymn?.audioUrl && (
-                        <>
-                            <View style={[
-                                styles.playButtonContainer,
-                                disabled && {opacity: 0.5}
-                            ]}>
-                                <FloatingButton
-                                    name={showAudioPlayer && isPlaying ? "pause" : "play"}
-                                    size={24}
-                                    color={hymn?.audioUrl ? colors.header : colors.textSecondary}
-                                    onPress={handleAudioPlay}
-                                    disabled={disabled}
-                                />
-                            </View>
-                            <View style={[
-                                styles.playButtonContainer,
-                                disabled && {opacity: 0.5}
-                            ]}>
-                                <FloatingButton
-                                    name={"stop"}
-                                    size={24}
-                                    color={colors.danger}
-                                    onPress={handleStop}
-                                    disabled={disabled}
-                                />
-                            </View>
-                        </>
-                    )}
-
-                    {hymn?.youtube && (
-                        <View style={[
-                            styles.playButtonContainer,
-                            disabled && {opacity: 0.5}
-                        ]}>
-                            <FloatingButton
-                                name="logo-youtube"
-                                size={20}
-                                color={colors.danger}
-                                onPress={handleYoutube}
-                                disabled={disabled}
-                            />
-                        </View>
-                    )}
-
-                    <View style={[
-                        styles.playButtonContainer,
-                        disabled && {opacity: 0.5}
-                    ]}>
+            {/* ── Single compact main row ── */}
+            <View style={styles.mainRow}>
+                {hasAudio && (
+                    <View style={[styles.btn, showAudioPlayer ? styles.noteBtnActive : styles.noteBtn, disabled && styles.faded]}>
                         <FloatingButton
-                            name={!isExpanded ? "chevron-up" : "chevron-down"}
-                            size={24}
-                            color={colors.text}
-                            onPress={toggleExpand}
+                            name="musical-note-outline"
+                            size={iconSize}
+                            color={showAudioPlayer ? colors.header : colors.textSecondary}
+                            onPress={toggleAudioStrip}
                             disabled={disabled}
                         />
                     </View>
-                </View>
+                )}
+                {hasAudio && (
+                    <View style={[styles.btn, styles.playBtn, disabled && styles.faded]}>
+                        <FloatingButton
+                            name={isPlaying ? 'pause' : 'play'}
+                            size={iconSize}
+                            color={colors.header}
+                            onPress={handlePlayPause}
+                            disabled={disabled}
+                        />
+                    </View>
+                )}
+                {hasAudio && (
+                    <View style={[styles.btn, styles.stopBtn, disabled && styles.faded]}>
+                        <FloatingButton
+                            name="stop"
+                            size={iconSize}
+                            color={colors.danger}
+                            onPress={handleStop}
+                            disabled={disabled}
+                        />
+                    </View>
+                )}
+
+                <View style={styles.spacer} />
+
+                <Animated.View style={[
+                    styles.btn,
+                    showSecondary ? styles.expandBtnActive : styles.expandBtn,
+                    {transform: [{rotate: chevronRotate}]},
+                    disabled && styles.faded,
+                ]}>
+                    <FloatingButton
+                        name="chevron-up"
+                        size={iconSize}
+                        color={showSecondary ? colors.header : colors.text}
+                        onPress={toggleSecondary}
+                        disabled={disabled}
+                    />
+                </Animated.View>
             </View>
         </View>
     );

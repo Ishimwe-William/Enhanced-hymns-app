@@ -14,19 +14,14 @@ import {useFilteredHymns} from "../../hooks/useFilteredHymns";
 
 const HymnsList = () => {
     const navigation = useNavigation();
-
-    // Destructure checkAndUpdateLyrics
     const {hymns, loading, getLocalHymnCount, forceSync, isOffline, checkAndUpdateLyrics} = useHymns();
     const [searchQuery, setSearchQuery] = useState('');
     const {colors} = useTheme().theme;
     const [localHymnCount, setLocalHymnCount] = useState(0);
     const isFocused = useIsFocused();
-
     const [viewMode, setViewMode] = useState('list');
 
-    useEffect(() => {
-        loadLocalHymnCount();
-    }, [isFocused, getLocalHymnCount]);
+    useEffect(() => { loadLocalHymnCount(); }, [isFocused, getLocalHymnCount]);
 
     const loadLocalHymnCount = async () => {
         try {
@@ -40,9 +35,7 @@ const HymnsList = () => {
 
     const filteredHymns = useFilteredHymns(hymns, searchQuery);
 
-    const handleMenuPress = () => {
-        navigation.dispatch(DrawerActions.openDrawer());
-    };
+    const handleMenuPress = () => navigation.dispatch(DrawerActions.openDrawer());
 
     const handleHymnSelect = (hymnId) => {
         try {
@@ -57,7 +50,6 @@ const HymnsList = () => {
             MyAlert.show("Offline", "Please connect to the internet to download lyrics.");
             return;
         }
-
         MyAlert.show(
             "Download Lyrics",
             "Do you want to download all hymn lyrics for offline access? (Audio tunes are not included)",
@@ -82,33 +74,45 @@ const HymnsList = () => {
         );
     };
 
-    const toggleViewMode = () => {
-        setViewMode(prev => prev === 'list' ? 'grid' : 'list');
-    };
-
-    // Performs targeted delta sync and notifies the user
     const refreshHymns = async () => {
         if (isOffline) {
             MyAlert.show("Offline", "Please connect to the internet to check for lyric updates.");
             return;
         }
-
         try {
             const result = await checkAndUpdateLyrics();
-
             MyAlert.show(
                 result.success ? (result.count > 0 ? "Updates Found" : "Up to Date") : "Error",
                 result.message
             );
-
-            if (result.success && result.count > 0) {
-                await loadLocalHymnCount();
-            }
+            if (result.success && result.count > 0) await loadLocalHymnCount();
         } catch (error) {
             console.error('Error updating lyrics:', error);
             MyAlert.show("Error", "An unexpected error occurred while checking for updates.");
         }
-    }
+    };
+
+    const styles = StyleSheet.create({
+        container: { flex: 1 },
+        toolbar: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingRight: 8,
+            backgroundColor: colors.card,
+            borderBottomWidth: 1,
+            borderBottomColor: colors.border,
+        },
+        searchBar: { flex: 1 },
+        iconButton: {
+            width: 36,
+            height: 36,
+            borderRadius: 10,
+            marginLeft: 4,
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: colors.primary,
+        },
+    });
 
     return (
         <View style={styles.container}>
@@ -121,10 +125,10 @@ const HymnsList = () => {
                 showMore={false}
             />
             {loading ? (
-                <LoadingScreen message="Loading hymns..."/>
+                <LoadingScreen message="Loading hymns..." />
             ) : (
                 <>
-                    <View style={styles.searchContainer}>
+                    <View style={styles.toolbar}>
                         <View style={styles.searchBar}>
                             <SearchBar
                                 value={searchQuery}
@@ -132,36 +136,30 @@ const HymnsList = () => {
                                 placeholder="Search hymns..."
                             />
                         </View>
-
                         <Pressable
                             style={styles.iconButton}
                             android_ripple={{color: colors.textSecondary, borderless: true}}
-                            onPress={toggleViewMode}
+                            onPress={() => setViewMode(prev => prev === 'list' ? 'grid' : 'list')}
                         >
                             <Ionicons
                                 name={viewMode === 'list' ? "grid-outline" : "list-outline"}
-                                size={24}
+                                size={20}
                                 color={colors.header}
                             />
                         </Pressable>
-
                         {localHymnCount === 0 && (
                             <Pressable
                                 style={styles.iconButton}
                                 android_ripple={{color: colors.textSecondary, borderless: true}}
                                 onPress={downloadAllHymns}
                             >
-                                <Ionicons
-                                    name={"cloud-download-outline"}
-                                    size={24}
-                                    color={colors.header}
-                                />
+                                <Ionicons name="cloud-download-outline" size={20} color={colors.header} />
                             </Pressable>
                         )}
                     </View>
 
                     {filteredHymns.length === 0 ? (
-                        <EmptyHymnList/>
+                        <EmptyHymnList />
                     ) : (
                         <HymnListView
                             hymns={filteredHymns}
@@ -174,24 +172,5 @@ const HymnsList = () => {
         </View>
     );
 };
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-    searchContainer: {
-        flexDirection: 'row',
-        marginRight: 10,
-    },
-    searchBar: {
-        flex: 1,
-    },
-    iconButton: {
-        paddingHorizontal: 8,
-        marginLeft: 4,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-});
 
 export default HymnsList;

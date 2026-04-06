@@ -8,27 +8,42 @@ const StanzaView = ({stanza, fontSizes}) => {
 
     const styles = useMemo(() => StyleSheet.create({
         container: {
-            marginBottom: 24,
-            alignItems: "center",
+            marginBottom: 20,
+            alignItems: 'center',
+        },
+        titleRow: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginBottom: 12,
+            gap: 8,
+        },
+        line: {
+            flex: 1,
+            height: 1,
+            backgroundColor: colors.border,
         },
         title: {
-            fontSize: 16,
-            fontWeight: '600',
-            color: colors.text,
-            marginBottom: 8,
+            fontSize: 13,
+            fontWeight: '700',
+            color: colors.textSecondary,
+            letterSpacing: 1,
+            textTransform: 'uppercase',
         },
         text: {
             textAlign: 'center',
             fontSize: fontSizes.text,
             lineHeight: fontSizes.lineHeight,
-            color: colors.textSecondary,
+            color: colors.text,
         },
     }), [colors, fontSizes]);
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Stanza {stanza.stanzaNumber}</Text>
-            {/* FIXED: Changed colors.primary to colors.text for high contrast */}
+            <View style={styles.titleRow}>
+                <View style={styles.line} />
+                <Text style={styles.title}>Stanza {stanza.stanzaNumber}</Text>
+                <View style={styles.line} />
+            </View>
             {renderTextWithUnderlines(stanza.text, stanza.underline, styles.text, colors.text)}
         </View>
     );

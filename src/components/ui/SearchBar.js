@@ -1,16 +1,16 @@
 import React from 'react';
-import { View, TextInput, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import {View, TextInput, StyleSheet} from 'react-native';
+import {Ionicons} from '@expo/vector-icons';
 import {useTheme} from "../../context/ThemeContext";
 
-const SearchBar = ({ value, onChangeText, placeholder, autoFocus = false }) => {
+const SearchBar = ({value, onChangeText, placeholder, autoFocus = false}) => {
     const {colors} = useTheme().theme;
 
     const styles = StyleSheet.create({
         searchContainer: {
-            paddingHorizontal: 16,
-            paddingVertical: 12,
-            backgroundColor:  colors.card,
+            paddingHorizontal: 8,
+            paddingVertical: 8,
+            backgroundColor: colors.card,
         },
         searchBar: {
             flexDirection: 'row',
@@ -18,7 +18,6 @@ const SearchBar = ({ value, onChangeText, placeholder, autoFocus = false }) => {
             backgroundColor: colors.primary,
             borderRadius: 10,
             paddingHorizontal: 12,
-            // paddingVertical: 8,
         },
         searchIcon: {
             marginRight: 8,
@@ -33,7 +32,7 @@ const SearchBar = ({ value, onChangeText, placeholder, autoFocus = false }) => {
     return (
         <View style={styles.searchContainer}>
             <View style={styles.searchBar}>
-                <Ionicons name="search" size={20} color={colors.textSecondary} style={styles.searchIcon} />
+                <Ionicons name="search" size={20} color={colors.textSecondary} style={styles.searchIcon}/>
                 <TextInput
                     style={styles.searchInput}
                     value={value}

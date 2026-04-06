@@ -2,7 +2,6 @@ import React from 'react';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
-// NEW: Import your UserContext to check the role
 import { useUser } from '../context/UserContext';
 
 import TabNavigator from './TabNavigator';
@@ -11,7 +10,6 @@ import SettingsScreen from '../screens/SettingsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import AboutScreen from '../screens/AboutScreen';
 import CustomDrawerContent from '../components/CustomDrawerContent';
-// NEW: Import a future Admin screen
 import AdminDashboardScreen from '../screens/admin/AdminDashboardScreen';
 
 const Drawer = createDrawerNavigator();

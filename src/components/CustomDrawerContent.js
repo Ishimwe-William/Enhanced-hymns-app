@@ -112,7 +112,11 @@ const CustomDrawerContent = (props) => {
                 <AppLogoHeader/>
             </View>
 
-            <DrawerContentScrollView {...props} style={styles.drawerContent}>
+            <DrawerContentScrollView
+                {...props}
+                style={styles.drawerContent}
+                contentContainerStyle={{ paddingTop: 5 }}
+            >
                 <DrawerItemList {...props} />
             </DrawerContentScrollView>
 
@@ -143,7 +147,7 @@ const styles = StyleSheet.create({
     footerItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 12,
+        paddingVertical: 8,
     }
 });
 

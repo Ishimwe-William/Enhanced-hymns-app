@@ -5,7 +5,6 @@ import {useTheme} from '../../context/ThemeContext';
 import HymnsList from '../../screens/hymns/HymnsList';
 import HymnDetail from '../../screens/hymns/HymnDetail';
 import CategoryHymns from '../../screens/hymns/CategoryHymn';
-// NEW: Import your future edit screen
 import EditHymnScreen from '../../screens/admin/EditHymnScreen';
 
 const Stack = createStackNavigator();
@@ -38,7 +37,6 @@ const HymnsStackNavigator = () => {
                 component={CategoryHymns}
                 options={{title: 'Category Hymns'}}
             />
-            {/* NEW: Added the Edit Screen to the stack */}
             <Stack.Screen
                 name="EditHymn"
                 component={EditHymnScreen}

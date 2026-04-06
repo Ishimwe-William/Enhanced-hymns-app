@@ -6,40 +6,46 @@ import {
     StyleSheet,
     Modal,
     TouchableWithoutFeedback,
-    Dimensions
+    useWindowDimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import {useTheme} from "../../context/ThemeContext";
-
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+import { useTheme } from "../../context/ThemeContext";
 
 const Header = ({
                     title,
                     showBack,
                     showRefresh,
                     showMenu,
-                    showEdit, // NEW: Added showEdit prop
+                    showEdit,
                     onBack,
                     onRefresh,
                     onMenu,
-                    onEdit,   // NEW: Added onEdit prop
+                    onEdit,
                     onMore,
                     showMore = true,
                     moreIcon = "ellipsis-vertical",
                     modalContent
                 }) => {
     const [modalVisible, setModalVisible] = useState(false);
-    const {theme} = useTheme();
-    const colors = theme.colors;
+    const { theme } = useTheme();
+    const { colors } = theme;
+    const { width: screenWidth, height: screenHeight } = useWindowDimensions();
 
     const styles = StyleSheet.create({
         header: {
-            backgroundColor: colors.primary,
-            paddingHorizontal: 16,
-            paddingVertical: 8,
+            backgroundColor: colors.card,
+            paddingHorizontal: 4,
+            paddingVertical: 6,
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-between',
+            borderBottomWidth: 1,
+            borderBottomColor: colors.border,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.06,
+            shadowRadius: 4,
+            elevation: 3,
         },
         leftSection: {
             flexDirection: 'row',
@@ -53,54 +59,55 @@ const Header = ({
             justifyContent: 'flex-end',
         },
         title: {
-            color: colors.text ,
-            fontSize: 20,
+            color: colors.text,
+            fontSize: 18,
             flex: 4,
-            fontWeight: '600',
+            fontWeight: '700',
             textAlign: 'center',
+            letterSpacing: 0.2,
         },
         iconButton: {
             padding: 8,
-        },
-        backButton: {
-            padding: 8,
-            marginRight: 8,
+            borderRadius: 20,
+            margin: 2,
         },
         modalOverlay: {
             flex: 1,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            backgroundColor: 'rgba(0,0,0,0.45)',
             justifyContent: 'center',
             alignItems: 'center',
         },
         modalContent: {
-            backgroundColor: colors.primary,
-            borderRadius: 12,
-            padding: 20,
+            backgroundColor: colors.card,
+            borderRadius: 16,
+            padding: 24,
             minWidth: screenWidth * 0.8,
             maxWidth: screenWidth * 0.9,
             maxHeight: screenHeight * 0.8,
-            shadowColor: theme.dark ? '#222' : '#000',
-            shadowOffset: {
-                width: 0,
-                height: 2,
-            },
-            shadowOpacity: 0.25,
-            shadowRadius: 3.84,
-            elevation: 5,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.15,
+            shadowRadius: 12,
+            elevation: 8,
+        },
+        editPill: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            backgroundColor: colors.header + '20',
+            borderRadius: 16,
+            paddingHorizontal: 10,
+            paddingVertical: 6,
+            gap: 4,
+        },
+        editPillText: {
+            fontSize: 12,
+            fontWeight: '600',
         },
     });
 
     const handleMorePress = () => {
-        if (modalContent) {
-            setModalVisible(true);
-        }
-        if (onMore) {
-            onMore();
-        }
-    };
-
-    const closeModal = () => {
-        setModalVisible(false);
+        if (modalContent) setModalVisible(true);
+        if (onMore) onMore();
     };
 
     return (
@@ -109,50 +116,54 @@ const Header = ({
                 <View style={styles.leftSection}>
                     {showMenu && (
                         <TouchableOpacity style={styles.iconButton} onPress={onMenu}>
-                            <Ionicons name="menu" size={24} color={colors.textSecondary}/>
+                            <Ionicons name="menu-outline" size={24} color={colors.text} />
                         </TouchableOpacity>
                     )}
                     {showBack && (
-                        <TouchableOpacity style={styles.backButton} onPress={onBack}>
-                            <Ionicons name="arrow-back" size={24} color={colors.textSecondary}/>
+                        <TouchableOpacity style={styles.iconButton} onPress={onBack}>
+                            <Ionicons name="arrow-back" size={24} color={colors.text} />
                         </TouchableOpacity>
                     )}
                 </View>
 
-                <Text ellipsizeMode='tail' numberOfLines={2} style={styles.title}>{title}</Text>
+                <Text ellipsizeMode="tail" numberOfLines={1} style={styles.title}>
+                    {title}
+                </Text>
 
                 <View style={styles.rightSection}>
                     {showRefresh && (
                         <TouchableOpacity style={styles.iconButton} onPress={onRefresh}>
-                            <Ionicons name="refresh" size={24} color={colors.textSecondary}/>
+                            <Ionicons name="refresh-outline" size={22} color={colors.text} />
                         </TouchableOpacity>
                     )}
-                    {/* NEW: Render Edit button if showEdit is true */}
                     {showEdit && (
-                        <TouchableOpacity style={styles.iconButton} onPress={onEdit}>
-                            <Ionicons name="pencil" size={24} color={colors.textSecondary}/>
+                        <TouchableOpacity
+                            style={[styles.iconButton, styles.editPill]}
+                            onPress={onEdit}
+                        >
+                            <Ionicons name="pencil-outline" size={14} color={colors.header} />
+                            <Text style={[styles.editPillText, { color: colors.header }]}>Edit</Text>
                         </TouchableOpacity>
                     )}
                     {showMore && (
                         <TouchableOpacity style={styles.iconButton} onPress={handleMorePress}>
-                            <Ionicons name={moreIcon} size={24} color={colors.textSecondary}/>
+                            <Ionicons name={moreIcon} size={22} color={colors.text} />
                         </TouchableOpacity>
                     )}
                 </View>
             </View>
 
-            {/* Modal */}
             <Modal
                 visible={modalVisible}
-                transparent={true}
+                transparent
                 animationType="fade"
-                onRequestClose={closeModal}
+                onRequestClose={() => setModalVisible(false)}
             >
-                <TouchableWithoutFeedback onPress={closeModal}>
+                <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
                     <View style={styles.modalOverlay}>
                         <TouchableWithoutFeedback onPress={() => {}}>
                             <View style={styles.modalContent}>
-                                {modalContent && modalContent({ closeModal })}
+                                {modalContent && modalContent({ closeModal: () => setModalVisible(false) })}
                             </View>
                         </TouchableWithoutFeedback>
                     </View>

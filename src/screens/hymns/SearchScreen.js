@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState} from 'react';
 import {View, StyleSheet} from 'react-native';
 import {useNavigation, DrawerActions} from '@react-navigation/native';
 import Header from '../../components/ui/Header';

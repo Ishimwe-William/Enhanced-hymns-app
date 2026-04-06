@@ -73,11 +73,15 @@ export const fetchUpdatedHymns = async (since) => {
 };
 export const fetchHymnDetails = async (hymnId) => {
     try {
+        // CRITICAL FIX: Ensure ID exists and is strictly a string to prevent Firebase indexOf crashes
+        if (!hymnId) throw new Error('No hymn ID provided');
+        const safeHymnId = String(hymnId);
+
         // Check network connectivity first
-            const isConnected = await checkNetworkConnection();
+        const isConnected = await checkNetworkConnection();
 
         if (!isConnected) {
-            const localHymn = await fetchHymnById(hymnId);
+            const localHymn = await fetchHymnById(safeHymnId);
 
             if (localHymn) {
                 return localHymn;
@@ -87,7 +91,8 @@ export const fetchHymnDetails = async (hymnId) => {
         }
 
         try {
-            const hymnDoc = doc(db, 'hymns', hymnId);
+            // Firebase call now safely uses the forced string
+            const hymnDoc = doc(db, 'hymns', safeHymnId);
             const hymnSnapshot = await getDoc(hymnDoc);
 
             if (hymnSnapshot.exists()) {
@@ -96,24 +101,14 @@ export const fetchHymnDetails = async (hymnId) => {
                     ...hymnSnapshot.data()
                 };
             } else {
-                // If not found on Firebase, check local storage as fallback
-                const localHymn = await fetchHymnById(hymnId);
-
-                if (localHymn) {
-                    return localHymn;
-                } else {
-                    throw new Error('Hymn not found');
-                }
+                const localHymn = await fetchHymnById(safeHymnId);
+                if (localHymn) return localHymn;
+                throw new Error('Hymn not found');
             }
         } catch (firebaseError) {
-            // If Firebase fails but we have internet, still try local storage
-            const localHymn = await fetchHymnById(hymnId);
-
-            if (localHymn) {
-                return localHymn;
-            } else {
-                throw firebaseError; // Re-throw original Firebase error
-            }
+            const localHymn = await fetchHymnById(safeHymnId);
+            if (localHymn) return localHymn;
+            throw firebaseError;
         }
 
     } catch (error) {
@@ -121,22 +116,21 @@ export const fetchHymnDetails = async (hymnId) => {
         throw error;
     }
 };
+
 export const updateHymnData = async (hymnId, hymnData) => {
     try {
-        // Validate input
-        if (!hymnId || typeof hymnId !== 'string') {
-            throw new Error('Invalid hymn ID provided');
-        }
+        if (!hymnId) throw new Error('Invalid hymn ID provided');
 
-        // Check network connectivity first
-            const isConnected = await checkNetworkConnection();
+        // CRITICAL FIX: Force string
+        const safeHymnId = String(hymnId);
+
+        const isConnected = await checkNetworkConnection();
         if (!isConnected) {
             throw new Error('No internet connection');
         }
 
-        const hymnDoc = doc(db, 'hymns', hymnId);
+        const hymnDoc = doc(db, 'hymns', safeHymnId);
 
-        // Add updatedAt timestamp
         const updateData = {
             ...hymnData,
             updatedAt: new Date().toISOString()
@@ -146,8 +140,6 @@ export const updateHymnData = async (hymnId, hymnData) => {
         return true;
     } catch (error) {
         console.error('Error updating hymn:', error);
-
-        // Don't show alert here, let the calling function handle it
         if (error.message === 'No internet connection') {
             throw new Error('No internet connection available');
         } else {

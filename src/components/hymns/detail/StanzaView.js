@@ -1,11 +1,11 @@
 import React, {useMemo} from 'react';
 import {View, Text, StyleSheet} from 'react-native';
 import {useTheme} from "../../../context/ThemeContext";
+import {renderTextWithUnderlines} from "../../../utils/hymns/textParser";
 
 const StanzaView = ({stanza, fontSizes}) => {
     const {colors} = useTheme().theme;
 
-    // MEMOIZE STYLES: Only recreate if colors or fontSizes change
     const styles = useMemo(() => StyleSheet.create({
         container: {
             marginBottom: 24,
@@ -28,9 +28,10 @@ const StanzaView = ({stanza, fontSizes}) => {
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Stanza {stanza.stanzaNumber}</Text>
-            <Text style={styles.text}>{stanza.text}</Text>
+            {/* FIXED: Changed colors.primary to colors.text for high contrast */}
+            {renderTextWithUnderlines(stanza.text, stanza.underline, styles.text, colors.text)}
         </View>
     );
 };
 
-export default React.memo(StanzaView); // Prevent unnecessary re-renders
+export default React.memo(StanzaView);

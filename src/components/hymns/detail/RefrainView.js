@@ -1,9 +1,10 @@
 import React, {useMemo} from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import {useTheme} from "../../../context/ThemeContext";
+import {renderTextWithUnderlines} from "../../../utils/hymns/textParser";
 
 const RefrainView = ({ refrain, fontSizes }) => {
-    const colors = useTheme().theme.colors;
+    const {colors} = useTheme().theme;
 
     const styles = useMemo(() => StyleSheet.create({
         container: {
@@ -31,10 +32,10 @@ const RefrainView = ({ refrain, fontSizes }) => {
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Refrain</Text>
-            <Text style={styles.text}>{refrain.text}</Text>
+            {/* FIXED: Changed colors.primary to colors.text */}
+            {renderTextWithUnderlines(refrain.text, refrain.underline, styles.text, colors.text)}
         </View>
     );
 };
-
 
 export default React.memo(RefrainView);

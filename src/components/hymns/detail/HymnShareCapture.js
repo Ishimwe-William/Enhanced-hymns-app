@@ -2,10 +2,11 @@ import React from 'react';
 import {View, Text, StyleSheet} from 'react-native';
 import {MyConstants} from '../../../utils/constants';
 import {useTheme} from "../../../context/ThemeContext";
+import {renderTextWithUnderlines} from "../../../utils/hymns/textParser";
 
 export const HymnShareCapture = React.forwardRef(({hymn}, ref) => {
     const {colors} = useTheme().theme;
-    console.log(hymn.title, ref)
+
     const styles = StyleSheet.create({
         captureOverlay: {
             position: 'absolute',
@@ -75,15 +76,20 @@ export const HymnShareCapture = React.forwardRef(({hymn}, ref) => {
                     .map((stanza, index) => (
                         <View key={index}>
                             <Text style={styles.stanzaRefrainText}>{stanza.stanzaNumber}.</Text>
-                            <Text style={styles.stanzaRefrainText}>{stanza.text}</Text>
+                            {/* FIXED: Changed to colors.text */}
+                            {renderTextWithUnderlines(stanza.text, stanza.underline, styles.stanzaRefrainText, colors.text)}
                         </View>
                     ))}
                 {hymn.refrains && Object.values(hymn.refrains).length > 0 && (
                     <View>
                         <Text style={styles.stanzaRefrainText}>Chorus:</Text>
-                        <Text style={styles.stanzaRefrainText}>
-                            {Object.values(hymn.refrains).sort((a, b) => a.refrainNumber - b.refrainNumber)[0].text}
-                        </Text>
+                        {/* FIXED: Changed to colors.text */}
+                        {renderTextWithUnderlines(
+                            Object.values(hymn.refrains).sort((a, b) => a.refrainNumber - b.refrainNumber)[0].text,
+                            Object.values(hymn.refrains).sort((a, b) => a.refrainNumber - b.refrainNumber)[0].underline,
+                            styles.stanzaRefrainText,
+                            colors.text
+                        )}
                     </View>
                 )}
                 <View style={styles.appBranding}>

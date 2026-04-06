@@ -2,6 +2,8 @@ import React from 'react';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
+// NEW: Import your UserContext to check the role
+import { useUser } from '../context/UserContext';
 
 import TabNavigator from './TabNavigator';
 import FavoritesScreen from '../screens/hymns/FavoritesScreen';
@@ -9,12 +11,17 @@ import SettingsScreen from '../screens/SettingsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import AboutScreen from '../screens/AboutScreen';
 import CustomDrawerContent from '../components/CustomDrawerContent';
+// NEW: Import a future Admin screen
+import AdminDashboardScreen from '../screens/admin/AdminDashboardScreen';
 
 const Drawer = createDrawerNavigator();
 
 export default function DrawerNavigator() {
     const { theme } = useTheme();
     const { colors } = theme;
+
+    // NEW: Destructure isAdmin from your context
+    const { isAdmin } = useUser();
 
     const screenOptions = {
         headerShown: false,
@@ -71,6 +78,19 @@ export default function DrawerNavigator() {
                     drawerIcon: createDrawerIcon('person-outline'),
                 }}
             />
+
+            {/* NEW: Conditionally render the Admin panel only for Admins */}
+            {isAdmin && (
+                <Drawer.Screen
+                    name="Admin"
+                    component={AdminDashboardScreen}
+                    options={{
+                        drawerLabel: 'Admin Panel',
+                        drawerIcon: createDrawerIcon('shield-checkmark-outline'),
+                    }}
+                />
+            )}
+
             <Drawer.Screen
                 name="About"
                 component={AboutScreen}

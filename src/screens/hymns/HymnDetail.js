@@ -8,6 +8,8 @@ import HymnControls from '../../components/hymns/detail/HymnControls';
 import LoadingScreen from '../../components/LoadingScreen';
 import {useHymns} from '../../context/HymnContext';
 import {useTheme} from '../../context/ThemeContext';
+// NEW: Import useUser to check for admin status
+import {useUser} from '../../context/UserContext';
 import {HymnDetailModal} from '../../components/modals/HymnDetailModal';
 import {HymnShareCapture} from '../../components/hymns/detail/HymnShareCapture';
 import {HymnShareHandler} from '../../utils/handlers/HymnShareHandler';
@@ -22,23 +24,29 @@ const HymnDetail = () => {
     const {hymns, loadHymnDetails, loadAndTrackHymn} = useHymns();
     const {colors} = useTheme().theme;
 
+    // NEW: Destructure isAdmin from user context
+    const {isAdmin} = useUser();
+
     const pagerRef = useRef(null);
     const viewShotRef = useRef(null);
-
-    // Track if we've recorded the initial hymn
     const trackedInitialRef = useRef(false);
 
-    // Wrapper that tracks only the initial hymn
+    if (!initialHymnId) {
+        return (
+            <View style={{ flex: 1, backgroundColor: colors.card }}>
+                <Header title="Error" showBack onBack={() => navigation.goBack()} />
+                <WarningBanner message="No hymn selected." />
+            </View>
+        );
+    }
+
     const loadHymnDetailsWrapper = React.useCallback((hymnId) => {
         return new Promise((resolve) => {
-            // If this is the initial hymn and we haven't tracked it yet, use loadAndTrackHymn
             if (!trackedInitialRef.current && hymnId === initialHymnId) {
                 trackedInitialRef.current = true;
                 loadAndTrackHymn(hymnId);
-                // Still need to resolve with the hymn data
                 loadHymnDetails(hymnId, (hymn) => resolve(hymn));
             } else {
-                // For all other hymns (neighbors), just load without tracking
                 loadHymnDetails(hymnId, (hymn) => resolve(hymn));
             }
         });
@@ -101,6 +109,13 @@ const HymnDetail = () => {
         navigation.goBack();
     };
 
+    // NEW: Handle navigating to the Edit screen
+    const handleEdit = () => {
+        if (currentHymn && currentHymn.id) {
+            navigation.navigate('EditHymn', { hymnId: currentHymn.id });
+        }
+    };
+
     const renderModalContent = ({closeModal}) => (
         <HymnDetailModal
             onShare={shareHandler?.handleShare}
@@ -137,6 +152,8 @@ const HymnDetail = () => {
                 showBack
                 onBack={handleBack}
                 showMore={true}
+                showEdit={isAdmin} // NEW: Only show if user is admin
+                onEdit={handleEdit} // NEW: Call handleEdit when pressed
                 modalContent={renderModalContent}
             />
 

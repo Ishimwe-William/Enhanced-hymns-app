@@ -33,7 +33,7 @@ const SettingsScreen = () => {
         dbInitialized,
     } = usePreferences();
 
-    const {forceSync, syncHymns, setSyncing, isOffline, isOnWifi, clearAllHymns, getLocalHymnCount} = useHymns();
+    const {forceSync, syncHymns, isOffline, isOnWifi, clearAllHymns, getLocalHymnCount} = useHymns();
 
     const [settingsLoading, setSettingsLoading] = useState(false);
     const [downloadingHymns, setDownloadingHymns] = useState(false);
@@ -92,7 +92,9 @@ const SettingsScreen = () => {
         try {
             setDownloadingHymns(true);
             setDownloadProgress('Starting download...');
-            const success = await forceSync(hymns => setHymns(hymns), setSyncing, isOffline, setDownloadProgress);
+
+            // Fixed Context call
+            const success = await forceSync(setDownloadProgress);
 
             if (success) {
                 await loadLocalHymnCount();
@@ -117,7 +119,9 @@ const SettingsScreen = () => {
         try {
             setDownloadingHymns(true);
             setDownloadProgress('Checking for updates...');
-            const success = await syncHymns(true, setSyncing, hymns => setHymns(hymns));
+
+            // Fixed Context call
+            const success = await syncHymns();
 
             if (success !== false) {
                 await loadLocalHymnCount();

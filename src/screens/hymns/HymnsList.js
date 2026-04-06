@@ -14,18 +14,19 @@ import {useFilteredHymns} from "../../hooks/useFilteredHymns";
 
 const HymnsList = () => {
     const navigation = useNavigation();
-    const {hymns, loading, syncHymns, setSyncing, getLocalHymnCount} = useHymns();
+
+    // Destructure checkAndUpdateLyrics
+    const {hymns, loading, getLocalHymnCount, forceSync, isOffline, checkAndUpdateLyrics} = useHymns();
     const [searchQuery, setSearchQuery] = useState('');
     const {colors} = useTheme().theme;
     const [localHymnCount, setLocalHymnCount] = useState(0);
     const isFocused = useIsFocused();
 
-    // NEW: State for view mode
-    const [viewMode, setViewMode] = useState('list'); // 'list' or 'grid'
+    const [viewMode, setViewMode] = useState('list');
 
     useEffect(() => {
         loadLocalHymnCount();
-    }, [isFocused, getLocalHymnCount,]);
+    }, [isFocused, getLocalHymnCount]);
 
     const loadLocalHymnCount = async () => {
         try {
@@ -52,31 +53,60 @@ const HymnsList = () => {
     };
 
     const downloadAllHymns = () => {
-        MyAlert.show("Downloading hymns", "This will take you to settings where you can download all hymns for offline access",
-            [{text: 'Cancel', style: "cancel"}, {
-                text: 'Go to Settings',
-                onPress: () => navigation.navigate("Settings")
-            }],
+        if (isOffline) {
+            MyAlert.show("Offline", "Please connect to the internet to download lyrics.");
+            return;
+        }
+
+        MyAlert.show(
+            "Download Lyrics",
+            "Do you want to download all hymn lyrics for offline access? (Audio tunes are not included)",
+            [
+                {text: 'Cancel', style: "cancel"},
+                {
+                    text: 'Download',
+                    onPress: async () => {
+                        try {
+                            const success = await forceSync(null, false);
+                            if (success) {
+                                await loadLocalHymnCount();
+                                MyAlert.show("Success", "Lyrics downloaded successfully.");
+                            }
+                        } catch (error) {
+                            console.error('Error downloading lyrics:', error);
+                            MyAlert.show("Error", "Failed to download lyrics.");
+                        }
+                    }
+                }
+            ],
         );
     };
 
-    // NEW: Toggle handler
     const toggleViewMode = () => {
         setViewMode(prev => prev === 'list' ? 'grid' : 'list');
     };
 
+    // Performs targeted delta sync and notifies the user
     const refreshHymns = async () => {
-        try {
-            const success = await syncHymns(true, setSyncing, hymns => setHymns(hymns));
+        if (isOffline) {
+            MyAlert.show("Offline", "Please connect to the internet to check for lyric updates.");
+            return;
+        }
 
-            if (success !== false) {
+        try {
+            const result = await checkAndUpdateLyrics();
+
+            MyAlert.show(
+                result.success ? (result.count > 0 ? "Updates Found" : "Up to Date") : "Error",
+                result.message
+            );
+
+            if (result.success && result.count > 0) {
                 await loadLocalHymnCount();
-                return true;
-            } else {
-                throw new Error('Failed to update hymns');
             }
         } catch (error) {
-            console.error('Error syncing hymns:', error);
+            console.error('Error updating lyrics:', error);
+            MyAlert.show("Error", "An unexpected error occurred while checking for updates.");
         }
     }
 
@@ -103,7 +133,6 @@ const HymnsList = () => {
                             />
                         </View>
 
-                        {/* NEW: View Mode Toggle Button */}
                         <Pressable
                             style={styles.iconButton}
                             android_ripple={{color: colors.textSecondary, borderless: true}}
@@ -137,7 +166,7 @@ const HymnsList = () => {
                         <HymnListView
                             hymns={filteredHymns}
                             onHymnSelect={handleHymnSelect}
-                            viewMode={viewMode} // Pass the state down
+                            viewMode={viewMode}
                         />
                     )}
                 </>
@@ -152,13 +181,11 @@ const styles = StyleSheet.create({
     },
     searchContainer: {
         flexDirection: 'row',
-        //alignItems: 'center',
-        marginRight: 10, // Added padding for the icons on the right
+        marginRight: 10,
     },
     searchBar: {
         flex: 1,
     },
-    // Updated generic style for both buttons
     iconButton: {
         paddingHorizontal: 8,
         marginLeft: 4,

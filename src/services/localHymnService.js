@@ -198,7 +198,8 @@ export const getLastSyncTime = async () => {
 /* ------------------------------------------------------------------ */
 
 const constructHymns = rows => rows.map(r => ({
-    id: r.id,
+    id: r.firebase_id,         // Map the main ID strictly to the Firebase string ID
+    sqlite_id: r.id,           // Keep the internal SQLite ID safe just in case
     firebaseId: r.firebase_id,
     number: r.hymn_number,
     origin: r.origin,

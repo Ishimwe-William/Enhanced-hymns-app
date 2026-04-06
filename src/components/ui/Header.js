@@ -18,9 +18,11 @@ const Header = ({
                     showBack,
                     showRefresh,
                     showMenu,
+                    showEdit, // NEW: Added showEdit prop
                     onBack,
                     onRefresh,
                     onMenu,
+                    onEdit,   // NEW: Added onEdit prop
                     onMore,
                     showMore = true,
                     moreIcon = "ellipsis-vertical",
@@ -125,6 +127,12 @@ const Header = ({
                             <Ionicons name="refresh" size={24} color={colors.textSecondary}/>
                         </TouchableOpacity>
                     )}
+                    {/* NEW: Render Edit button if showEdit is true */}
+                    {showEdit && (
+                        <TouchableOpacity style={styles.iconButton} onPress={onEdit}>
+                            <Ionicons name="pencil" size={24} color={colors.textSecondary}/>
+                        </TouchableOpacity>
+                    )}
                     {showMore && (
                         <TouchableOpacity style={styles.iconButton} onPress={handleMorePress}>
                             <Ionicons name={moreIcon} size={24} color={colors.textSecondary}/>
@@ -153,6 +161,5 @@ const Header = ({
         </>
     );
 };
-
 
 export default Header;

@@ -2,7 +2,14 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useUser } from './UserContext';
 import { usePreferences } from './PreferencesContext';
 import { useNetwork } from './NetworkContext';
-import {clearAllHymns, getLocalHymnCount} from '../services/localHymnService';
+import { fetchUpdatedHymns } from '../services/hymnService';
+import {
+  clearAllHymns,
+  getLocalHymnCount,
+  getLastSyncTime,
+  syncHymns as localSyncHymns,
+  fetchHymns as fetchLocalHymns
+} from '../services/localHymnService';
 import {
   loadHymns,
   loadHymnDetails,
@@ -69,15 +76,41 @@ export const HymnProvider = ({ children, dbInitialized }) => {
     syncHymns: () => syncHymns(true, setSyncing, setHymns, preferences.offlineDownload, isOffline),
     loadHymns: () => loadHymns(setHymns, setLoading, isOffline, preferences.offlineDownload),
 
-    // CRITICAL FIX: loadHymnDetails without callback (for non-tracking loads)
     loadHymnDetails: (hymnId, callback) => loadHymnDetails(hymnId, isOffline, callback),
 
-    // CRITICAL FIX: loadAndTrackHymn explicitly adds to recent
     loadAndTrackHymn: (hymnId) => loadHymnDetails(hymnId, isOffline, (hymn) => {
       if (hymn) {
         addToRecent(hymn, recentHymns, setRecentHymns, user?.uid, preferences.syncFavorites, isOffline);
       }
     }),
+
+    // Delta sync explicitly for pulling updated lyrics
+    checkAndUpdateLyrics: async () => {
+      if (isOffline) {
+        return { success: false, message: 'No internet connection available.' };
+      }
+
+      setSyncing(true);
+      try {
+        const lastSync = await getLastSyncTime();
+        const updatedHymns = await fetchUpdatedHymns(lastSync);
+
+        if (updatedHymns && updatedHymns.length > 0) {
+          await localSyncHymns(updatedHymns);
+          const updatedLocalHymns = await fetchLocalHymns();
+          setHymns(updatedLocalHymns);
+
+          return { success: true, count: updatedHymns.length, message: `Successfully downloaded ${updatedHymns.length} updated lyric(s).` };
+        } else {
+          return { success: true, count: 0, message: 'All lyrics are already up to date.' };
+        }
+      } catch (error) {
+        console.error('Error checking for lyric updates:', error);
+        return { success: false, message: 'Failed to check for lyric updates.' };
+      } finally {
+        setSyncing(false);
+      }
+    },
 
     toggleFavorite: (hymn) => toggleFavorite(hymn, favorites, setFavorites, user?.uid, preferences.syncFavorites, isOffline),
     isFavorite: (hymnId) => isFavorite(hymnId, favorites),
@@ -87,7 +120,10 @@ export const HymnProvider = ({ children, dbInitialized }) => {
     clearUserData: () => clearUserData(user?.uid, setFavorites, setRecentHymns),
     clearRecentHymns: () => clearRecentHymns(user?.uid, setRecentHymns),
     clearFavorites: () => clearFavorites(user?.uid, setFavorites),
-    forceSync: () => forceSync(setHymns, setSyncing, isOffline, null, preferences.offlineTunes),
+
+    forceSync: (progressCallback = null, downloadTunes = preferences.offlineTunes) =>
+        forceSync(setHymns, setSyncing, isOffline, progressCallback, downloadTunes),
+
     isLoggedIn: !!user?.uid,
   };
 
